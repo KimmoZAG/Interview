@@ -1,0 +1,36 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# C/C++ build outputs
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.pdb
+*.ilk
+*.idb
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+build/
+cmake-build-*/
+
+# Python (if ai-infra adds Python later)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node (if ai-infra adds JS later)
+node_modules/
