@@ -1,0 +1,112 @@
+site_name: Interview Notes
+site_url: https://kimmozag.github.io/Interview/
+repo_url: https://github.com/KimmoZAG/Interview
+repo_name: KimmoZAG/Interview
+docs_dir: .
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+plugins:
+  - search:
+      separator: '[\s\u200b\-]'
+
+nav:
+  - 首页: README.md
+
+  - AI Infra:
+    - 索引: ai-infra/00-index.md
+    - 算子:
+      - 张量与内存布局: ai-infra/operators/01-tensors-shapes-layout.md
+      - Kernel 与并行基础: ai-infra/operators/02-kernels-and-parallelism.md
+      - 内存层级与 Roofline: ai-infra/operators/03-memory-hierarchy-and-roofline.md
+      - 计算图、融合与调度: ai-infra/operators/04-graph-fusion-scheduling.md
+      - 量化基础: ai-infra/operators/05-quantization-basics.md
+      - 训练并行策略: ai-infra/operators/06-training-parallelism.md
+      - FlashAttention 与 IO-aware Attention: ai-infra/operators/07-flashattention-io-aware.md
+    - 模型:
+      - Transformer 最小知识: ai-infra/models/01-transformer-minimum.md
+      - Attention 与 KV Cache: ai-infra/models/02-attention-kv-cache.md
+      - Norm/激活/残差与数值稳定性: ai-infra/models/03-norm-activation-stability.md
+      - Tokenizer 与采样: ai-infra/models/04-tokenization-and-sampling.md
+      - 评测与基准: ai-infra/models/05-evaluation-and-benchmarking.md
+      - 训练资源核算: ai-infra/models/06-training-resource-accounting.md
+      - Post-training 与 Alignment: ai-infra/models/07-post-training-and-alignment.md
+      - MoE 最小导读: ai-infra/models/08-moe-minimum.md
+      - Reward 与 Verifier 设计: ai-infra/models/09-reward-and-verifier-design.md
+    - 推理:
+      - 推理栈全景: ai-infra/inference/01-inference-stack-overview.md
+      - ONNX Runtime / TensorRT: ai-infra/inference/02-onnxruntime-tensorrt.md
+      - 图编译 TVM/MLIR/XLA: ai-infra/inference/03-graph-compiler-tvm-mlir-xla.md
+      - LLM Serving: ai-infra/inference/04-llm-serving.md
+      - 推理优化 Playbook: ai-infra/inference/05-optimization-playbook.md
+      - 可观测性与调试: ai-infra/inference/06-observability-and-debugging.md
+      - Scaling Laws 工程用法: ai-infra/inference/07-scaling-laws-and-budgeting.md
+      - 预训练数据工程: ai-infra/inference/08-pretraining-data-engineering.md
+      - 训练指标 vs 产品指标: ai-infra/inference/09-training-metrics-vs-product-metrics.md
+      - 数据混配与 Curriculum: ai-infra/inference/10-data-mixing-and-curriculum.md
+      - Paged KV 与 Allocator: ai-infra/inference/11-paged-kv-and-allocator.md
+      - 长上下文训练与推理: ai-infra/inference/12-long-context-training-and-serving.md
+    - 附录:
+      - 术语表: ai-infra/appendix/glossary.md
+      - 坑位清单: ai-infra/appendix/gotchas.md
+      - CS336 资源导读: ai-infra/appendix/cs336-from-scratch-resource-map.md
+      - CS336 逐讲映射: ai-infra/appendix/cs336-lecture-to-ai-infra-map.md
+      - 参考资料: ai-infra/appendix/references.md
+
+  - C++:
+    - 索引: c++/00-index.md
+    - 通用知识:
+      - 工具链与构建: c++/general/01-toolchain-and-build.md
+      - 对象生命周期与值语义: c++/general/02-object-lifetime-and-value-semantics.md
+      - RAII 与智能指针: c++/general/03-raii-and-smart-pointers.md
+      - 模板与类型: c++/general/04-templates-and-types.md
+      - STL 容器/迭代器/算法: c++/general/05-stl-containers-iterators-algorithms.md
+      - 并发基础: c++/general/06-concurrency-basics.md
+      - 运行时多态: c++/general/07-runtime-polymorphism.md
+    - 版本特性:
+      - C++11: c++/versions/cpp11.md
+      - C++14: c++/versions/cpp14.md
+      - C++17: c++/versions/cpp17.md
+      - C++20: c++/versions/cpp20.md
+      - C++23: c++/versions/cpp23.md
+    - 附录:
+      - 术语表: c++/appendix/glossary.md
+      - 坑位清单: c++/appendix/gotchas.md
+      - 参考资料: c++/appendix/references.md
