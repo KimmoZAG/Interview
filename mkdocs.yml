@@ -2,7 +2,6 @@ site_name: Interview Notes
 site_url: https://kimmozag.github.io/Interview/
 repo_url: https://github.com/KimmoZAG/Interview
 repo_name: KimmoZAG/Interview
-docs_dir: .
 
 theme:
   name: material

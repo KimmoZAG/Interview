@@ -21,5 +21,12 @@ jobs:
       - name: Install dependencies
         run: pip install mkdocs-material
 
+      - name: Set up docs directory
+        run: |
+          mkdir docs
+          cp README.md docs/README.md
+          ln -s "$GITHUB_WORKSPACE/ai-infra" docs/ai-infra
+          ln -s "$GITHUB_WORKSPACE/c++" "docs/c++"
+
       - name: Deploy
         run: mkdocs gh-deploy --force
