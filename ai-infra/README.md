@@ -4,9 +4,9 @@
 
 组织方式：
 
-- **operators/**：基本算子与 kernel（layout、并行、带宽、融合、量化）
-- **models/**：模型结构与推理相关机制（Transformer、KV cache、采样等）
-- **inference/**：推理框架与工程落地（runtime、图编译、serving、观测与优化）
+- **operators/**：基本算子与 kernel（layout、并行、带宽、融合、量化、训练并行、attention kernel）
+- **models/**：模型结构与训练/推理相关机制（Transformer、KV cache、采样、资源核算、MoE、post-training、reward/verifier 等）
+- **inference/**：推理框架与工程落地（runtime、图编译、serving、观测、优化、预算规划、数据工程、产品指标、长上下文）
 - **appendix/**：术语、坑、参考
 
 写作约定（建议）：
