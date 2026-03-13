@@ -34,3 +34,5 @@ venv/
 
 # Node (if ai-infra adds JS later)
 node_modules/
+
+# reference
