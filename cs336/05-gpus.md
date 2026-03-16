@@ -1,0 +1,235 @@
+# 05｜GPU 基础与性能直觉
+
+原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec05/>
+
+## 先抓住这讲要点
+
+- GPU 优化的第一原则不是“多算”，而是**少搬数据**。
+- 现代加速器越来越是 **memory-bound**，而不是 compute-bound。
+- tiling、fusion、mixed precision、recompute，本质上都在围绕一件事打转：**提高 arithmetic intensity**。
+- FlashAttention 之所以经典，不是因为“注意力公式变了”，而是因为它把 IO 路径重新设计了一遍。
+
+## 代表图
+
+![lec05](https://tuananhbui89.github.io/assets/img/cs336-2025/frames/lec05/01-05-46-1400.webp)
+
+## 这一讲在回答什么
+
+很多人初学 GPU 时，脑子里想的是“GPU 算得快”。  
+但真正要学会的是：
+
+- GPU 为什么有时候很快；
+- 为什么有时候明明 FLOPs 很高却跑不满；
+- 为什么访存模式常常比数学公式本身更重要。
+
+一句话总结：
+
+> GPU 优化本质上是在做数据调度，而不只是算术加速。
+
+## 中文解读
+
+### 1. CPU 和 GPU 的思维方式不同
+
+- CPU：优化单线程低延迟、复杂控制流；
+- GPU：优化海量线程高吞吐、规则计算。
+
+所以写 GPU kernel 时要尽量让一大群线程做相似的事，别让 warp 内分叉得像开盲盒。
+
+如果 CPU 像一个灵活但人少的手工作坊，那么 GPU 更像一条庞大的流水线工厂。  
+流水线工厂最怕什么？最怕不是活儿难，而是：
+
+- 原料来得不整齐；
+- 工人动作不一致；
+- 中间搬运太慢。
+
+### 2. GPU 的真正瓶颈常常不是 FLOPs
+
+现代 GPU 的 raw compute 增长速度很快，但外部 memory bandwidth 增长没那么快。  
+这导致很多 kernel 的真实瓶颈不是“算不过来”，而是：
+
+- 数据没法足够快地从 HBM 搬到 SM；
+- 中间结果频繁写回再读出；
+- 小 kernel launch 太多，流水线断断续续。
+
+所以很多时候你看到“卡没跑满”，不代表算力不够，而是数据喂不进去。
+
+### 3. Roofline 模型是最值得背的图之一
+
+核心量：
+
+$$
+	ext{Arithmetic Intensity} = \frac{\text{FLOPs}}{\text{Bytes Moved}}
+$$
+
+- 如果 intensity 太低，性能被带宽卡住；
+- 如果 intensity 足够高，才可能吃满算力峰值。
+
+这张图的教学价值极高，因为它告诉你：
+
+> 不是所有优化都该去“减少 FLOPs”，很多优化其实该去“减少 bytes moved”。
+
+### 4. 为什么 warp divergence 很伤
+
+warp 内线程通常 lockstep 执行。  
+如果一个 warp 里有些线程走 `if` 分支，有些走 `else` 分支，硬件往往要把两条路都执行一遍，只是分批屏蔽线程。
+
+结果就是：
+
+- 理论上 32 个线程并行；
+- 实际上同一时间可能只有一部分在干活。
+
+所以 GPU 特别喜欢：
+
+- 规则的 memory access；
+- 规则的控制流；
+- 可批量、可向量化的运算。
+
+### 5. 为什么 tiling 是 GPU 优化母题
+
+假设你在做矩阵乘法。  
+如果每次算一个输出元素都去 global memory 读完整行列，那代价极高。
+
+tiling 的思路是：
+
+1. 从 global memory 读一小块 tile 到 shared memory；
+2. 在片上反复复用这块 tile；
+3. 算够了再把结果写回。
+
+收益是：
+
+- 同一份数据被更多 FLOPs 消耗；
+- global memory 访问次数显著下降；
+- arithmetic intensity 提高。
+
+这也是为什么很多高性能 kernel 看起来都在做一件事：
+
+> 把大问题切成能放进片上缓存/共享内存的小块，再局部高复用地算完。
+
+### 6. 为什么 fusion 常常很值
+
+很多 elementwise 运算如果分成多步：
+
+1. 读一次输入；
+2. 写回中间结果；
+3. 再读回来；
+4. 再写一次。
+
+这样虽然 FLOPs 不多，但 DRAM 流量会很大。  
+fusion 则把多步算子合并成一个 kernel，让中间值尽量停留在寄存器或 shared memory 里。
+
+所以 fusion 常常带来的收益是：
+
+- 少 launch；
+- 少写回；
+- 少重读；
+- 更高吞吐。
+
+### 7. mixed precision 为什么本质上也是 IO 优化
+
+大家常说混合精度是“为了更快”。  
+其实更精确地说，它很多时候是为了：
+
+- 每个数更小；
+- 带宽占用更少；
+- cache/片上容量更大；
+- tensor core 更容易发挥。
+
+也就是说，它并不只是数学精度策略，还是 memory traffic 策略。
+
+### 8. recompute 为什么是合理的
+
+如果某个中间结果：
+
+- 存下来要占大量显存；
+- 下次再读回来也很贵；
+- 但重新算一遍并不贵；
+
+那就可以选择 recompute。
+
+这在 GPU 世界里非常自然，因为现代硬件常常是“算力相对富裕，带宽相对紧张”。  
+所以：
+
+> 多算一点，少搬一点，可能反而更快。
+
+## FlashAttention 为什么快
+
+不是因为它“改了注意力公式”，而是因为它：
+
+- 不把 $N \times N$ attention matrix 整块落到 HBM；
+- 在片上 memory 做 tile 级计算；
+- 用 online softmax 维持数值稳定；
+- backward 时选择重算，减少显存写回。
+
+它之所以经典，是因为它非常系统性地展示了一个原则：
+
+> 在现代加速器上，重新设计 IO 路径，常常比重新设计数学公式更重要。
+
+## 代码拆解：在线 softmax 思想
+
+```python
+import math
+
+def online_softmax(xs):
+    m = -float('inf')
+    s = 0.0
+    for x in xs:
+        new_m = max(m, x)
+        s = s * math.exp(m - new_m) + math.exp(x - new_m)
+        m = new_m
+    return [math.exp(x - m) / s for x in xs]
+```
+
+这段代码说明：即使数据分块到达，也能维护一个全局正确的 softmax 归一化项。  
+这就是 FlashAttention 能 tile 化 attention 的关键数学部件。
+
+### 为什么它重要
+
+普通 softmax 看起来像需要“一次性看到整行 logits 才能算”。  
+online softmax 则告诉你：不需要。  
+只要维护：
+
+- 当前最大值；
+- 当前归一化和；
+
+就能边读 tile 边更新。这一改，直接把 attention 从“必须落大矩阵”变成了“可流式计算”。
+
+## GPU 优化 checklist
+
+- 访问是否 coalesced？
+- 有没有不必要的 global memory round-trip？
+- 能不能 fuse？
+- 能不能 tile 到 shared memory？
+- 能不能用更低精度？
+- 能不能 checkpoint / recompute？
+- warp 有没有明显 divergence？
+- tile size 是否和硬件粒度对齐？
+
+## 面试里怎么讲这一讲
+
+如果被问：**“GPU 优化最核心的原则是什么？”**
+
+可以答：
+
+> 现代 GPU 优化最核心的原则通常不是减少 FLOPs，而是减少数据搬运，特别是减少 global memory 和 HBM 的流量。因为很多深度学习 kernel 实际上是 memory-bound 的，所以像 tiling、fusion、mixed precision 和 recompute 这些优化，本质上都是在提高 arithmetic intensity。
+
+如果被问：**“FlashAttention 为什么快？”**
+
+可以答：
+
+> 它快不是因为改变了 attention 目标，而是通过 tiling、online softmax 和重算，把原本需要写出和读取大规模 attention matrix 的 IO 路径优化掉了。所以它本质上是一个 IO-aware attention 实现。
+
+## 本讲小结
+
+这一讲建立的是 GPU 性能直觉：
+
+- GPU 喜欢规则、高复用、少搬运；
+- 很多模型算子不是算不动，而是喂不饱；
+- 真正好的 kernel 往往先优化数据路径，再优化数学路径。
+
+## 复习题
+
+1. 为什么很多深度学习 kernel 是 memory-bound？
+2. tiling 如何提升 arithmetic intensity？
+3. FlashAttention 的本质优化点是什么？
+4. 为什么说 mixed precision 也是一种 IO 优化？
+5. recompute 在什么情况下会让系统更快？

@@ -23,9 +23,11 @@ jobs:
 
       - name: Set up docs directory
         run: |
+          rm -rf docs
           mkdir docs
           cp README.md docs/README.md
           ln -s "$GITHUB_WORKSPACE/ai-infra" docs/ai-infra
+          ln -s "$GITHUB_WORKSPACE/cs336" docs/cs336
           ln -s "$GITHUB_WORKSPACE/c++" "docs/c++"
 
       - name: Deploy

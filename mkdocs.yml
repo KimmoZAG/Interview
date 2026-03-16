@@ -49,6 +49,27 @@ plugins:
 nav:
   - 首页: README.md
 
+  - CS336:
+    - 索引: cs336/00-index.md
+    - 课程说明: cs336/README.md
+    - 01 课程总览与 Tokenization: cs336/01-overview-and-tokenization.md
+    - 02 PyTorch 与资源核算: cs336/02-pytorch-and-resource-accounting.md
+    - 03 架构与超参数: cs336/03-architectures-and-hyperparameters.md
+    - 04 Mixture of Experts: cs336/04-mixture-of-experts.md
+    - 05 GPU 基础: cs336/05-gpus.md
+    - 06 Kernel 与 Triton: cs336/06-kernels-and-triton.md
+    - 07 并行训练（一）: cs336/07-parallelism.md
+    - 08 并行训练（二）: cs336/08-parallelism-part2.md
+    - 09 Scaling Law 基础: cs336/09-scaling-laws-fundamentals.md
+    - 10 推理优化: cs336/10-inference.md
+    - 11 Scaling Law 案例: cs336/11-scaling-laws-case-studies.md
+    - 12 评测: cs336/12-evaluation.md
+    - 13 数据工程（一）: cs336/13-data.md
+    - 14 数据工程（二）: cs336/14-data-part2.md
+    - 15 对齐（一）SFT 与 RLHF: cs336/15-alignment-sft-rlhf.md
+    - 16 对齐（二）RL: cs336/16-alignment-rl.md
+    - 17 对齐（三）Policy Gradient: cs336/17-alignment-rl-part2.md
+
   - AI Infra:
     - 索引: ai-infra/00-index.md
     - 算子:
