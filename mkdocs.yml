@@ -6,25 +6,39 @@ repo_name: KimmoZAG/Interview
 theme:
   name: material
   language: zh
+  icon:
+    repo: fontawesome/brands/github
+  font:
+    text: Noto Sans SC
+    code: JetBrains Mono
   features:
+    - navigation.instant
+    - navigation.instant.progress
     - navigation.tabs
-    - navigation.top
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.path
+    - toc.follow
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
   palette:
     - scheme: default
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: cyan
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-sunny
         name: 切换到深色模式
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: teal
+      accent: cyan
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-night
         name: 切换到浅色模式
 
 markdown_extensions:
@@ -32,86 +46,116 @@ markdown_extensions:
       generic: true
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - admonition
   - tables
+  - attr_list
+  - md_in_html
   - toc:
       permalink: true
+      title: 目录
 
 extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
+extra_css: []
+
 plugins:
   - search:
-      separator: '[\s\u200b\-]'
+      separator: '[\s\u200b\-_]'
+      lang:
+        - zh
+        - en
 
 nav:
   - 首页: README.md
 
   - CS336:
-    - 索引: cs336/00-index.md
-    - 课程说明: cs336/README.md
-    - 01 课程总览与 Tokenization: cs336/01-overview-and-tokenization.md
-    - 02 PyTorch 与资源核算: cs336/02-pytorch-and-resource-accounting.md
-    - 03 架构与超参数: cs336/03-architectures-and-hyperparameters.md
-    - 04 Mixture of Experts: cs336/04-mixture-of-experts.md
-    - 05 GPU 基础: cs336/05-gpus.md
-    - 06 Kernel 与 Triton: cs336/06-kernels-and-triton.md
-    - 07 并行训练（一）: cs336/07-parallelism.md
-    - 08 并行训练（二）: cs336/08-parallelism-part2.md
-    - 09 Scaling Law 基础: cs336/09-scaling-laws-fundamentals.md
-    - 10 推理优化: cs336/10-inference.md
-    - 11 Scaling Law 案例: cs336/11-scaling-laws-case-studies.md
-    - 12 评测: cs336/12-evaluation.md
-    - 13 数据工程（一）: cs336/13-data.md
-    - 14 数据工程（二）: cs336/14-data-part2.md
-    - 15 对齐（一）SFT 与 RLHF: cs336/15-alignment-sft-rlhf.md
-    - 16 对齐（二）RL: cs336/16-alignment-rl.md
-    - 17 对齐（三）Policy Gradient: cs336/17-alignment-rl-part2.md
+    - cs336/00-index.md
+    - 课程笔记:
+      - 01 课程总览与 Tokenization: cs336/01-overview-and-tokenization.md
+      - 02 PyTorch 与资源核算: cs336/02-pytorch-and-resource-accounting.md
+      - 03 架构与超参数: cs336/03-architectures-and-hyperparameters.md
+      - 04 Mixture of Experts: cs336/04-mixture-of-experts.md
+      - 05 GPU 基础: cs336/05-gpus.md
+      - 06 Kernel 与 Triton: cs336/06-kernels-and-triton.md
+      - 07 并行训练（一）: cs336/07-parallelism.md
+      - 08 并行训练（二）: cs336/08-parallelism-part2.md
+      - 09 Scaling Law 基础: cs336/09-scaling-laws-fundamentals.md
+      - 10 推理优化: cs336/10-inference.md
+      - 11 Scaling Law 案例: cs336/11-scaling-laws-case-studies.md
+      - 12 评测: cs336/12-evaluation.md
+      - 13 数据工程（一）: cs336/13-data.md
+      - 14 数据工程（二）: cs336/14-data-part2.md
+      - 15 对齐（一）SFT 与 RLHF: cs336/15-alignment-sft-rlhf.md
+      - 16 对齐（二）RL: cs336/16-alignment-rl.md
+      - 17 对齐（三）Policy Gradient: cs336/17-alignment-rl-part2.md
 
   - AI Infra:
-    - 索引: ai-infra/00-index.md
-    - 算子:
-      - 张量与内存布局: ai-infra/operators/01-tensors-shapes-layout.md
-      - Kernel 与并行基础: ai-infra/operators/02-kernels-and-parallelism.md
-      - 内存层级与 Roofline: ai-infra/operators/03-memory-hierarchy-and-roofline.md
-      - 计算图、融合与调度: ai-infra/operators/04-graph-fusion-scheduling.md
-      - 量化基础: ai-infra/operators/05-quantization-basics.md
-      - 训练并行策略: ai-infra/operators/06-training-parallelism.md
-      - FlashAttention 与 IO-aware Attention: ai-infra/operators/07-flashattention-io-aware.md
-    - 模型:
-      - Transformer 最小知识: ai-infra/models/01-transformer-minimum.md
-      - Attention 与 KV Cache: ai-infra/models/02-attention-kv-cache.md
-      - Norm/激活/残差与数值稳定性: ai-infra/models/03-norm-activation-stability.md
-      - Tokenizer 与采样: ai-infra/models/04-tokenization-and-sampling.md
-      - 评测与基准: ai-infra/models/05-evaluation-and-benchmarking.md
-      - 训练资源核算: ai-infra/models/06-training-resource-accounting.md
-      - Post-training 与 Alignment: ai-infra/models/07-post-training-and-alignment.md
-      - MoE 最小导读: ai-infra/models/08-moe-minimum.md
-      - Reward 与 Verifier 设计: ai-infra/models/09-reward-and-verifier-design.md
-    - 推理:
-      - 推理栈全景: ai-infra/inference/01-inference-stack-overview.md
-      - ONNX Runtime / TensorRT: ai-infra/inference/02-onnxruntime-tensorrt.md
-      - 图编译 TVM/MLIR/XLA: ai-infra/inference/03-graph-compiler-tvm-mlir-xla.md
-      - LLM Serving: ai-infra/inference/04-llm-serving.md
-      - 推理优化 Playbook: ai-infra/inference/05-optimization-playbook.md
-      - 可观测性与调试: ai-infra/inference/06-observability-and-debugging.md
-      - Scaling Laws 工程用法: ai-infra/inference/07-scaling-laws-and-budgeting.md
-      - 预训练数据工程: ai-infra/inference/08-pretraining-data-engineering.md
-      - 训练指标 vs 产品指标: ai-infra/inference/09-training-metrics-vs-product-metrics.md
-      - 数据混配与 Curriculum: ai-infra/inference/10-data-mixing-and-curriculum.md
-      - Paged KV 与 Allocator: ai-infra/inference/11-paged-kv-and-allocator.md
-      - 长上下文训练与推理: ai-infra/inference/12-long-context-training-and-serving.md
+    - ai-infra/00-index.md
+    - 算子优化:
+      - ai-infra/01-operator-optimization/00-index.md
+      - 张量与内存布局: ai-infra/01-operator-optimization/01-tensors-shapes-layout.md
+      - Kernel 执行模型: ai-infra/01-operator-optimization/02-kernel-execution-model.md
+      - 内存层级与 Roofline: ai-infra/01-operator-optimization/03-memory-hierarchy-and-roofline.md
+      - 计算图融合与调度: ai-infra/01-operator-optimization/04-graph-fusion-scheduling.md
+      - 量化基础: ai-infra/01-operator-optimization/05-quantization-basics.md
+      - FlashAttention 与 IO-aware: ai-infra/01-operator-optimization/06-flashattention-io-aware.md
+    - 推理引擎:
+      - ai-infra/02-inference-engine/00-index.md
+      - 推理栈全景: ai-infra/02-inference-engine/01-inference-stack-overview.md
+      - ONNX Runtime / TensorRT: ai-infra/02-inference-engine/02-runtime-onnxruntime-tensorrt.md
+      - 图编译 TVM/MLIR/XLA: ai-infra/02-inference-engine/03-graph-compiler-tvm-mlir-xla.md
+      - LLM Serving: ai-infra/02-inference-engine/04-llm-serving.md
+      - 推理优化 Playbook: ai-infra/02-inference-engine/05-optimization-playbook.md
+      - 可观测性与调试: ai-infra/02-inference-engine/06-observability-and-debugging.md
+      - Paged KV 与 Allocator: ai-infra/02-inference-engine/07-paged-kv-and-allocator.md
+      - 长上下文推理: ai-infra/02-inference-engine/08-long-context-serving.md
+    - LLM 架构:
+      - ai-infra/03-llm-architecture/00-index.md
+      - Transformer 最小知识: ai-infra/03-llm-architecture/01-transformer-minimum.md
+      - Attention 与 KV Cache: ai-infra/03-llm-architecture/02-attention-kv-cache.md
+      - Norm/激活/数值稳定性: ai-infra/03-llm-architecture/03-norm-activation-stability.md
+      - Tokenizer 与采样: ai-infra/03-llm-architecture/04-tokenization-and-sampling.md
+      - 评测与基准: ai-infra/03-llm-architecture/05-evaluation-and-benchmarking.md
+      - MoE 最小导读: ai-infra/03-llm-architecture/06-moe-minimum.md
+      - 训练资源核算: ai-infra/03-llm-architecture/07-training-resource-accounting.md
+    - 分布式通信:
+      - ai-infra/04-communication/00-index.md
+      - 并行训练策略: ai-infra/04-communication/01-training-parallelism.md
+      - 通信基础: ai-infra/04-communication/02-communication-foundations.md
+      - 互联与拓扑: ai-infra/04-communication/03-interconnects-and-topology.md
+      - 集合通信原语: ai-infra/04-communication/04-collectives.md
+      - 并行到通信映射: ai-infra/04-communication/05-parallelism-to-communication.md
     - 附录:
-      - 术语表: ai-infra/appendix/glossary.md
-      - 坑位清单: ai-infra/appendix/gotchas.md
-      - CS336 资源导读: ai-infra/appendix/cs336-from-scratch-resource-map.md
-      - CS336 逐讲映射: ai-infra/appendix/cs336-lecture-to-ai-infra-map.md
-      - 参考资料: ai-infra/appendix/references.md
+      - ai-infra/05-appendix/00-index.md
+      - 术语表: ai-infra/05-appendix/glossary.md
+      - 坑位清单: ai-infra/05-appendix/gotchas.md
+      - Scaling Laws 工程用法: ai-infra/05-appendix/scaling-laws-and-budgeting.md
+      - 预训练数据工程: ai-infra/05-appendix/pretraining-data-engineering.md
+      - 数据混配与 Curriculum: ai-infra/05-appendix/data-mixing-and-curriculum.md
+      - Post-training 与 Alignment: ai-infra/05-appendix/post-training-and-alignment.md
+      - Reward 与 Verifier 设计: ai-infra/05-appendix/reward-and-verifier-design.md
+      - 训练指标 vs 产品指标: ai-infra/05-appendix/training-metrics-vs-product-metrics.md
+      - CS336 资源导读: ai-infra/05-appendix/cs336-from-scratch-resource-map.md
+      - CS336 逐讲映射: ai-infra/05-appendix/cs336-lecture-to-ai-infra-map.md
+      - 参考资料: ai-infra/05-appendix/references.md
 
   - C++:
-    - 索引: c++/00-index.md
+    - c++/00-index.md
     - 通用知识:
       - 工具链与构建: c++/general/01-toolchain-and-build.md
       - 对象生命周期与值语义: c++/general/02-object-lifetime-and-value-semantics.md
