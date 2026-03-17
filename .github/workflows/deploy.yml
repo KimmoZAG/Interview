@@ -31,7 +31,7 @@ jobs:
           path: ~/.cache/pip
 
       - name: Install dependencies
-        run: pip install "mkdocs-material>=9,<10"
+        run: pip install "mkdocs-material>=9,<10" mkdocs-glightbox mkdocs-git-revision-date-localized-plugin mkdocs-minify-plugin
 
       - name: Deploy
         run: mkdocs gh-deploy --force

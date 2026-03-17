@@ -2,6 +2,7 @@ site_name: Interview Notes
 site_url: https://kimmozag.github.io/Interview/
 repo_url: https://github.com/KimmoZAG/Interview
 repo_name: KimmoZAG/Interview
+edit_uri: edit/main/
 
 theme:
   name: material
@@ -29,6 +30,9 @@ theme:
     - content.tabs.link
     - content.tooltips
     - content.footnote.tooltips
+    - navigation.footer
+    - content.action.edit
+    - content.action.view
   palette:
     - scheme: default
       primary: teal
@@ -75,6 +79,9 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.tilde
+  - pymdownx.smartsymbols
   - pymdownx.tasklist:
       custom_checkbox: true
       clickable_checkbox: true
@@ -95,7 +102,26 @@ plugins:
       lang:
         - zh
         - en
-  - tags
+  - tags:
+      tags_file: reference/tags.md
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      locale: zh
+      fallback_to_build_date: true
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+  - minify:
+      minify_html: true
+      minify_js: false
+      minify_css: false
 
 nav:
   - 首页: README.md
@@ -200,3 +226,4 @@ nav:
 
   - 参考资料:
     - CS336 原始讲义链接: reference/cs336.md
+    - 标签索引: reference/tags.md

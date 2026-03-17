@@ -472,3 +472,179 @@
     border-left: 3pt solid #000;
   }
 }
+
+
+/* -----------------------------------------------------------
+   18. NAVIGATION FOOTER — 上一页/下一页
+   ----------------------------------------------------------- */
+
+.md-footer-nav {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  margin-top: 2em;
+}
+
+.md-footer-nav__link {
+  padding: 1.2em 1.5em;
+  transition: background 0.2s ease, color 0.2s ease;
+  border-radius: 8px;
+}
+
+.md-footer-nav__link:hover {
+  background: var(--md-default-fg-color--lightest);
+}
+
+.md-footer-nav__title {
+  font-weight: 600;
+}
+
+.md-footer-nav__direction {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+
+/* -----------------------------------------------------------
+   19. GIT REVISION DATE — 最后更新时间
+   ----------------------------------------------------------- */
+
+.md-source-date {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  padding-top: 0.4em;
+}
+
+/* Date badge in page footer */
+.git-revision-date-localized-plugin-timeago,
+.git-revision-date-localized-plugin-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.78rem;
+  opacity: 0.65;
+  font-style: italic;
+}
+
+
+/* -----------------------------------------------------------
+   20. TAGS — 标签样式
+   ----------------------------------------------------------- */
+
+/* Tag pill on page */
+.md-typeset .md-tag {
+  border-radius: 20px;
+  padding: 0.15em 0.65em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 15%, transparent);
+  color: var(--md-primary-fg-color);
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 35%, transparent);
+  transition: background 0.15s, color 0.15s;
+}
+
+.md-typeset .md-tag:hover {
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  text-decoration: none;
+}
+
+/* Tags section header on page */
+.md-typeset .md-tags {
+  margin-bottom: 1.2em;
+}
+
+
+/* -----------------------------------------------------------
+   21. CONTENT HEADER ACTIONS — 编辑/查看源码按钮
+   ----------------------------------------------------------- */
+
+.md-content__button {
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.md-content__button:hover {
+  color: var(--md-primary-fg-color);
+  opacity: 1;
+}
+
+
+/* -----------------------------------------------------------
+   22. GLIGHTBOX CUSTOM — 灯箱样式微调
+   ----------------------------------------------------------- */
+
+.glightbox-clean .gclose,
+.glightbox-clean .gnext,
+.glightbox-clean .gprev {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+}
+
+/* Image caption style */
+.gslide-description .gdesc-inner {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  text-align: center;
+}
+
+
+/* -----------------------------------------------------------
+   23. PAGE HERO BANNER — 首页导航卡片增强
+   ----------------------------------------------------------- */
+
+/* Grid card hover lift effect */
+.md-typeset .grid.cards > :is(ul, ol) > li,
+.md-typeset .grid > .card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li:hover,
+.md-typeset .grid > .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .grid.cards > :is(ul, ol) > li:hover,
+[data-md-color-scheme="slate"] .md-typeset .grid > .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+
+/* -----------------------------------------------------------
+   24. SEARCH RESULT ENHANCEMENTS — 搜索结果
+   ----------------------------------------------------------- */
+
+.md-search-result__article {
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+
+.md-search-result__article:hover {
+  background: var(--md-default-fg-color--lightest);
+}
+
+.md-search-result__teaser mark {
+  background: color-mix(in srgb, var(--md-accent-fg-color) 30%, transparent);
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+
+/* -----------------------------------------------------------
+   25. RESPONSIVE TWEAKS — 移动端适配
+   ----------------------------------------------------------- */
+
+@media screen and (max-width: 76.1875em) {
+  .md-typeset h1 {
+    font-size: 1.5em;
+  }
+
+  .md-typeset h2 {
+    font-size: 1.15em;
+  }
+
+  .md-grid {
+    max-width: 100%;
+  }
+}
