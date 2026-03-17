@@ -1,0 +1,474 @@
+/* ============================================================
+   INTERVIEW NOTES — Custom Extra CSS
+   Material for MkDocs  ·  Kimmo Zhang
+   ============================================================ */
+
+
+/* -----------------------------------------------------------
+   1. CHINESE TYPOGRAPHY — 字体与阅读排版
+   ----------------------------------------------------------- */
+
+/* Font smoothing + CJK-aware line-breaking */
+.md-typeset {
+  font-size: 0.925rem;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Tighter paragraph spacing for dense technical notes */
+.md-typeset p {
+  margin-block-end: 0.75em;
+}
+
+/* List item vertical rhythm */
+.md-typeset li {
+  margin-block-end: 0.25em;
+}
+
+/* H1 — page title with accent underline */
+.md-typeset h1 {
+  font-size: 1.75em;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  border-bottom: 3px solid var(--md-primary-fg-color);
+  padding-bottom: 0.25em;
+  margin-bottom: 1em;
+}
+
+/* H2 — section marker with left accent bar */
+.md-typeset h2 {
+  font-size: 1.3em;
+  font-weight: 700;
+  border-left: 4px solid var(--md-primary-fg-color);
+  padding-left: 0.65em;
+  margin-top: 1.6em;
+}
+
+/* H3 — lighter, no decoration */
+.md-typeset h3 {
+  font-size: 1.08em;
+  font-weight: 600;
+  margin-top: 1.2em;
+}
+
+/* Strong — slightly bolder contrast for CJK */
+.md-typeset strong {
+  font-weight: 700;
+  color: var(--md-typeset-color);
+}
+
+/* Blockquote — elegant left stripe */
+.md-typeset blockquote {
+  border-left: 4px solid var(--md-primary-fg-color);
+  background: var(--md-code-bg-color);
+  border-radius: 0 8px 8px 0;
+  padding: 0.6em 1em;
+  margin: 1em 0;
+  font-style: normal;
+  opacity: 0.9;
+}
+
+
+/* -----------------------------------------------------------
+   2. GLASSMORPHISM HEADER — 毛玻璃顶栏 & 标签页
+   ----------------------------------------------------------- */
+
+.md-header {
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  background-color: color-mix(in srgb, var(--md-primary-fg-color) 88%, transparent) !important;
+}
+
+.md-tabs {
+  backdrop-filter: saturate(150%) blur(8px);
+  -webkit-backdrop-filter: saturate(150%) blur(8px);
+  background-color: color-mix(in srgb, var(--md-primary-fg-color) 82%, transparent) !important;
+}
+
+/* Drop shadow when page is scrolled */
+.md-header[data-md-state="shadow"] {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+}
+
+
+/* -----------------------------------------------------------
+   3. CUSTOM SCROLLBAR — 自定义滚动条
+   ----------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--md-primary-fg-color);
+  border-radius: 10px;
+  opacity: 0.6;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 1;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-primary-fg-color) transparent;
+}
+
+
+/* -----------------------------------------------------------
+   4. SIDEBAR NAVIGATION — 侧边栏
+   ----------------------------------------------------------- */
+
+/* Section label in sidebar nav */
+.md-nav--secondary .md-nav__title,
+.md-nav__title[for="__drawer"] {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* Active nav link */
+.md-nav__item--active > .md-nav__link {
+  color: var(--md-primary-fg-color);
+  font-weight: 600;
+}
+
+/* Hover transition */
+.md-nav__link {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+/* Narrow the sidebar text slightly for density */
+.md-nav__item {
+  font-size: 0.8rem;
+}
+
+
+/* -----------------------------------------------------------
+   5. CODE BLOCKS — 代码块
+   ----------------------------------------------------------- */
+
+/* Rounded corners + soft shadow */
+.md-typeset .highlight {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.md-typeset .highlight pre {
+  border-radius: 0;          /* parent already handles rounding */
+  margin: 0;
+}
+
+/* Code title bar */
+.md-typeset .highlight .filename {
+  border-radius: 8px 8px 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Inline code — subtler pill */
+.md-typeset code:not([class]) {
+  border-radius: 4px;
+  padding: 0.1em 0.38em;
+  font-size: 0.875em;
+  background: var(--md-code-bg-color);
+}
+
+/* Keyboard key styling */
+.md-typeset kbd {
+  border-radius: 4px;
+  font-size: 0.8em;
+  padding: 0.1em 0.4em;
+}
+
+
+/* -----------------------------------------------------------
+   6. ADMONITIONS — 提示框
+   ----------------------------------------------------------- */
+
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 8px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+}
+
+/* ── Custom admonition: "interview" (面试题) ── */
+:root {
+  --md-admonition-icon--interview: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3C6.48 3 2 7.48 2 13c0 1.85.5 3.58 1.38 5.06L2 22l3.94-1.38A9.92 9.92 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 3 12 3zm1 15h-2v-2h2v2zm0-4h-2V7h2v7z"/></svg>');
+}
+
+.md-typeset .admonition.interview,
+.md-typeset details.interview {
+  border-color: #7c4dff;
+}
+
+.md-typeset .interview > .admonition-title,
+.md-typeset .interview > summary {
+  background-color: rgba(124, 77, 255, 0.12);
+  color: #7c4dff;
+}
+
+.md-typeset .interview > .admonition-title::before,
+.md-typeset .interview > summary::before {
+  background-color: #7c4dff;
+  -webkit-mask-image: var(--md-admonition-icon--interview);
+  mask-image: var(--md-admonition-icon--interview);
+}
+
+/* ── Custom admonition: "concept" (核心概念) ── */
+:root {
+  --md-admonition-icon--concept: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.94-1.82 5.45-4.38 6.53L14 17H10l-.62-1.47A7 7 0 0 1 5 9a7 7 0 0 1 7-7m0 16a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1z"/></svg>');
+}
+
+.md-typeset .admonition.concept,
+.md-typeset details.concept {
+  border-color: #ff6d00;
+}
+
+.md-typeset .concept > .admonition-title,
+.md-typeset .concept > summary {
+  background-color: rgba(255, 109, 0, 0.1);
+  color: #ff6d00;
+}
+
+.md-typeset .concept > .admonition-title::before,
+.md-typeset .concept > summary::before {
+  background-color: #ff6d00;
+  -webkit-mask-image: var(--md-admonition-icon--concept);
+  mask-image: var(--md-admonition-icon--concept);
+}
+
+
+/* -----------------------------------------------------------
+   7. TABLES — 表格
+   ----------------------------------------------------------- */
+
+.md-typeset table:not([class]) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  display: table;
+  width: 100%;
+  font-size: 0.88rem;
+}
+
+.md-typeset table:not([class]) th {
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.md-typeset table:not([class]) tr:hover td {
+  background-color: var(--md-code-bg-color);
+  transition: background-color 0.15s ease;
+}
+
+/* Responsive horizontal scroll for wide tables */
+.md-typeset .md-typeset__scrollwrap {
+  overscroll-behavior-x: contain;
+}
+
+
+/* -----------------------------------------------------------
+   8. GRID CARDS — 卡片网格
+   ----------------------------------------------------------- */
+
+.md-typeset .grid.cards > :is(ul, ol) > li,
+.md-typeset .grid > .card {
+  border-radius: 10px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li:hover,
+.md-typeset .grid > .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  transform: translateY(-2px);
+}
+
+
+/* -----------------------------------------------------------
+   9. TAGS — 标签徽章
+   ----------------------------------------------------------- */
+
+.md-tag {
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.12em 0.55em;
+}
+
+
+/* -----------------------------------------------------------
+   10. MATH — 数学公式居中与间距
+   ----------------------------------------------------------- */
+
+/* Display math block spacing */
+.md-typeset .arithmatex:not(.arithmatex--inline) {
+  overflow-x: auto;
+  margin: 1em 0;
+  padding: 0.5em 0;
+}
+
+/* Prevent MathJax overflow clipping */
+.MathJax {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+
+/* -----------------------------------------------------------
+   11. MERMAID DIAGRAMS — 图表
+   ----------------------------------------------------------- */
+
+.md-typeset .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.2em 0;
+}
+
+.md-typeset .mermaid svg {
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+
+/* -----------------------------------------------------------
+   12. TASKLIST — 交互复选框
+   ----------------------------------------------------------- */
+
+.md-typeset .task-list-control .task-list-indicator::before {
+  border-radius: 3px;
+}
+
+
+/* -----------------------------------------------------------
+   13. FOOTNOTES — 脚注
+   ----------------------------------------------------------- */
+
+.md-typeset .footnote {
+  font-size: 0.82rem;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  margin-top: 2em;
+  padding-top: 0.5em;
+  opacity: 0.8;
+}
+
+.md-typeset .footnote-ref {
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
+
+/* -----------------------------------------------------------
+   14. DEFINITION LISTS — 定义列表
+   ----------------------------------------------------------- */
+
+.md-typeset dt {
+  font-weight: 700;
+  color: var(--md-primary-fg-color);
+  margin-top: 0.6em;
+}
+
+.md-typeset dd {
+  margin-left: 1.5em;
+  margin-bottom: 0.4em;
+  border-left: 2px solid var(--md-primary-fg-color--light, #80cbc4);
+  padding-left: 0.8em;
+}
+
+
+/* -----------------------------------------------------------
+   15. CONTENT WIDTH — 阅读宽度
+   ----------------------------------------------------------- */
+
+/* Slightly wider max-width for dense technical content */
+.md-grid {
+  max-width: 1400px;
+}
+
+
+/* -----------------------------------------------------------
+   16. DARK MODE TWEAKS — 暗色模式
+   ----------------------------------------------------------- */
+
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #0f1117;
+  --md-code-bg-color: #1a1d2e;
+  --md-default-fg-color--lightest: rgba(255, 255, 255, 0.07);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .highlight {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) {
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+
+[data-md-color-scheme="slate"] .md-typeset blockquote {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .admonition,
+[data-md-color-scheme="slate"] .md-typeset details {
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Softer link color in dark mode */
+[data-md-color-scheme="slate"] .md-typeset a {
+  color: var(--md-accent-fg-color);
+}
+
+
+/* -----------------------------------------------------------
+   17. PRINT — 打印样式
+   ----------------------------------------------------------- */
+
+@media print {
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-footer {
+    display: none !important;
+  }
+
+  .md-typeset {
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  .md-typeset h1 {
+    border-bottom: 1.5pt solid #000;
+  }
+
+  .md-typeset h2 {
+    border-left: 3pt solid #000;
+  }
+}
