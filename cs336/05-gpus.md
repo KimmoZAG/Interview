@@ -60,7 +60,7 @@
 核心量：
 
 $$
-	ext{Arithmetic Intensity} = \frac{\text{FLOPs}}{\text{Bytes Moved}}
+\text{Arithmetic Intensity} = \frac{\text{FLOPs}}{\text{Bytes Moved}}
 $$
 
 - 如果 intensity 太低，性能被带宽卡住；

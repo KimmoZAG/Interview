@@ -24,8 +24,9 @@ jobs:
       - name: Set up docs directory
         run: |
           rm -rf docs
-          mkdir docs
+          mkdir -p docs/javascripts
           cp README.md docs/README.md
+          cp -r "$GITHUB_WORKSPACE/docs/javascripts/." docs/javascripts/
           ln -s "$GITHUB_WORKSPACE/ai-infra" docs/ai-infra
           ln -s "$GITHUB_WORKSPACE/cs336" docs/cs336
           ln -s "$GITHUB_WORKSPACE/c++" "docs/c++"

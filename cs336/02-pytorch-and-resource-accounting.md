@@ -10,7 +10,7 @@
 - 一个很常用的训练估算规则是：
 
 $$
-	ext{Training FLOPs} \approx 6 \times N_{params} \times N_{tokens}
+\text{Training FLOPs} \approx 6 \times N_{params} \times N_{tokens}
 $$
 
 - 显存预算必须同时算：参数、梯度、优化器状态、激活。
@@ -76,13 +76,13 @@ $$
 这两部分加起来，经常又接近前向的两倍，所以一步训练大致是：
 
 $$
-	ext{forward} + \text{backward} \approx 3 \times \text{forward}
+\text{forward} + \text{backward} \approx 3 \times \text{forward}
 $$
 
 如果把 forward 进一步粗略写成“每个 token 大约扫过一遍参数”，就能得到大模型工程里非常经典的经验式：
 
 $$
-	ext{Training FLOPs} \approx 6PN
+\text{Training FLOPs} \approx 6PN
 $$
 
 其中：
@@ -156,7 +156,7 @@ def estimate_adam_memory(num_params, bytes_per_param=2, master_bytes=4):
 很多人第一次估算显存时，只会算：
 
 $$
-	ext{params} \times \text{bytes per param}
+\text{params} \times \text{bytes per param}
 $$
 
 但真实训练里，通常至少还要加上：
@@ -177,7 +177,7 @@ $$
 所以很多时候，真正的总显存占用更像：
 
 $$
-	ext{Memory} = \text{Params} + \text{Grads} + \text{Opt States} + \text{Activations}
+\text{Memory} = \text{Params} + \text{Grads} + \text{Opt States} + \text{Activations}
 $$
 
 而且 activation 还会随着：
@@ -253,7 +253,7 @@ z = y.contiguous()        # 这里可能真实复制一份新内存
 对 $(m \times n) \cdot (n \times p)$ 的 dense matmul：
 
 $$
-	ext{FLOPs} = 2mnp
+\text{FLOPs} = 2mnp
 $$
 
 这个公式非常值得熟。因为：
@@ -269,7 +269,7 @@ $$
 MFU = Model FLOPs Utilization，大致是：
 
 $$
-	ext{MFU} = \frac{\text{measured FLOPs/s}}{\text{theoretical peak FLOPs/s}}
+\text{MFU} = \frac{\text{measured FLOPs/s}}{\text{theoretical peak FLOPs/s}}
 $$
 
 它的意义是：
