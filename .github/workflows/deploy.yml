@@ -29,6 +29,7 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/ai-infra" docs/ai-infra
           ln -s "$GITHUB_WORKSPACE/cs336" docs/cs336
           ln -s "$GITHUB_WORKSPACE/c++" "docs/c++"
+          ln -s "$GITHUB_WORKSPACE/reference" docs/reference
 
       - name: Deploy
         run: mkdocs gh-deploy --force

@@ -36,3 +36,5 @@ venv/
 node_modules/
 
 # reference
+docs/
+site/
