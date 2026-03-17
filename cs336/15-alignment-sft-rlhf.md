@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec15/>
 
+课程导航：上一讲 [14 数据工程 2](14-data-part2.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [16 对齐 2](16-alignment-rl.md)
+
 ## 先抓住这讲要点
 
 - 预训练模型不等于可用助手。真正变成 ChatGPT 风格产品，通常必须经过 **post-training**。
@@ -213,3 +215,25 @@ sample = {
 3. 为什么说后训练更像“行为塑形”，而不只是“继续喂知识”？
 4. 为什么 pairwise preference 在工程上常比 full demonstration 更经济？
 5. 为什么过于“华丽”的 SFT 数据有时会带来副作用？
+
+## 面试常见题目
+
+1. 为什么很多产品模型在预训练之后还必须做 SFT？
+2. SFT 数据质量为什么比单纯数据量更关键？
+3. reward model 在 RLHF 流程里到底扮演什么角色？
+4. 为什么 pairwise preference 数据很适合对齐阶段？
+5. 什么情况下 post-training 会把模型“教坏”？
+
+## 面试题答题提示
+
+### 1. 回答 post-training 问题时，先讲接口再讲知识
+
+更准确的说法是：它主要在重塑模型的行为接口，而不是重新灌输大规模基础知识。
+
+### 2. SFT 数据要讲能力边界
+
+如果示范远超 base model 实际能力，模型容易学到华丽格式和高置信表达，而不一定学到更真实的能力。
+
+### 3. RLHF 要讲成偏好信号利用
+
+它吸引人的地方在于：很多开放任务很难写唯一标准答案，但相对偏好更容易收集。

@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec05/>
 
+课程导航：上一讲 [04 Mixture of Experts](04-mixture-of-experts.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [06 Kernel 与 Triton](06-kernels-and-triton.md)
+
 ## 先抓住这讲要点
 
 - GPU 优化的第一原则不是“多算”，而是**少搬数据**。
@@ -233,3 +235,25 @@ online softmax 则告诉你：不需要。
 3. FlashAttention 的本质优化点是什么？
 4. 为什么说 mixed precision 也是一种 IO 优化？
 5. recompute 在什么情况下会让系统更快？
+
+## 面试常见题目
+
+1. roofline 模型为什么能帮助你判断优化方向？
+2. HBM、SRAM、register 在性能上分别意味着什么？
+3. 为什么同样的 FLOPs，不同 kernel 的速度会差很多？
+4. 什么时候你应该优先优化数据布局，而不是继续改数学公式？
+5. 为什么很多“理论算力很高”的 GPU 程序实际跑不满？
+
+## 面试题答题提示
+
+### 1. 回答 GPU 问题时，先讲数据搬运
+
+很多性能问题不是算子数学错了，而是数据没有被高效送到计算单元。这个视角很关键。
+
+### 2. roofline 不是装饰图，是决策工具
+
+它最有用的地方是告诉你瓶颈更接近带宽还是更接近算力，从而决定应该做 fusion、tiling 还是换算法。
+
+### 3. FlashAttention 要讲成 IO-aware 实现
+
+它不是在改变 attention 定义，而是在减少中间大矩阵的写回与读回成本。

@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec12/>
 
+课程导航：上一讲 [11 Scaling law 案例](11-scaling-laws-case-studies.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [13 数据工程 1](13-data.md)
+
 ## 先抓住这讲要点
 
 - 评测没有“脱离上下文的客观分数”，只有**带协议、带分布、带目标的信号**。
@@ -253,3 +255,25 @@ eval_config = {
 3. perplexity 最适合哪类分析，最不适合替代哪类能力判断？
 4. 开放式任务为什么很难找到完全无偏的评测方式？
 5. 为什么 invocation protocol 和 decontamination 必须写进评测说明？
+
+## 面试常见题目
+
+1. 为什么同一个 benchmark 分数常常无法直接横向比较？
+2. closed-book、tool-use、agentic setting 为什么应该分开评估？
+3. 为什么安全评测比知识问答更难设计？
+4. decontamination 不做会带来什么风险？
+5. 一个“可信评测”最少应该披露哪些信息？
+
+## 面试题答题提示
+
+### 1. 回答评测问题时，要先讲 protocol
+
+prompt 模板、采样方式、是否允许工具、评分规则，这些都会显著改变结果。
+
+### 2. perplexity 要讲清边界
+
+它非常适合作为训练和数据混配信号，但不该被讲成产品能力的完整代理指标。
+
+### 3. “模型分数”往往混着方法和系统
+
+更成熟的回答方式是区分 base model、本轮 prompting / tool stack、以及执行系统设置。

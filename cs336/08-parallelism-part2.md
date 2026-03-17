@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec08/>
 
+课程导航：上一讲 [07 并行训练 1](07-parallelism.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [09 Scaling law 基础](09-scaling-laws-fundamentals.md)
+
 ## 先抓住这讲要点
 
 - 分布式训练里很多“高层并行策略”，最后都会落到少数几种 collective 上：`all-reduce`、`reduce-scatter`、`all-gather`、`broadcast`。
@@ -298,3 +300,25 @@ def benchmark_collective(fn, tensor, warmup=10, iters=50):
 3. 节点内互联和节点外网络差异，会怎样影响并行策略设计？
 4. 为什么 TP 比较怕高延迟网络？
 5. 如果 collective benchmark 数字异常好看，你会先怀疑哪些测量错误？
+
+## 面试常见题目
+
+1. collective 选择为什么会直接影响扩展效率？
+2. NCCL benchmark 结果应该和哪些背景信息一起解读？
+3. pipeline parallel 的 bubble 为什么很难完全消掉？
+4. 为什么真实系统常把 TP 限在节点内？
+5. 网络拓扑为什么会反过来约束并行设计？
+
+## 面试题答题提示
+
+### 1. 回答通信问题时，一定带上拓扑
+
+离开 NVLink、NVSwitch、InfiniBand、跨机延迟这些背景，很多并行结论都不成立。
+
+### 2. benchmark 要讲测量边界
+
+warmup、同步、消息大小、rank 数、实际字节量，这些都是 benchmark 是否可信的前提。
+
+### 3. collective 不是抽象 API，而是系统成本
+
+更成熟的回答方式是：某个 collective 改变了什么数据流，因此改变了通信频率、带宽需求和关键路径延迟。

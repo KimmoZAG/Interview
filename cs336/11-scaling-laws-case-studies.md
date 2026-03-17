@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec11/>
 
+课程导航：上一讲 [10 推理优化](10-inference.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [12 评测](12-evaluation.md)
+
 ## 先抓住这讲要点
 
 - 真正可落地的 scaling workflow，不只是“画一条 log-log 直线”，而是 **稳定参数化 + 可迁移超参 + 合理训练日程 + 小模型代理实验 + 大模型确认** 的完整流程。
@@ -215,3 +217,25 @@ def wsd(step, warmup, stable_end, total, lr):
 3. WSD 相比很多传统 schedule，更适合哪类实验分析？
 4. 为什么 checkpoint rewinding 能显著节省 scaling 实验成本？
 5. 为什么 `20:1` 这类 token/param 比例不能被当成普适真理？
+
+## 面试常见题目
+
+1. MUP 为什么对大规模调参迁移有价值？
+2. WSD 为什么适合做 scaling 实验而不只是普通训练？
+3. checkpoint rewinding 具体节省了哪部分成本？
+4. 为什么 case study 比单纯记结论更重要？
+5. 不同论文给出不同最优 token/param 比例时，应该怎么理解？
+
+## 面试题答题提示
+
+### 1. 这讲重点不是背论文名字
+
+更重要的是看这些案例分别在解决什么实验设计难题：超参迁移、预算复用、外推可靠性。
+
+### 2. 讲案例时要抽象成方法论
+
+比如 MUP 是“让宽度变化时优化行为更可比”，WSD 是“让 token budget 对比更规整”，rewinding 是“复用已花掉的前期训练成本”。
+
+### 3. 不要把经验比例讲成铁律
+
+更稳妥的说法是：它们都是特定模型族、训练目标和数据分布下得到的经验最优点。

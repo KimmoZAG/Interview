@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec14/>
 
+课程导航：上一讲 [13 数据工程 1](13-data.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [15 对齐 1](15-alignment-sft-rlhf.md)
+
 ## 先抓住这讲要点
 
 - 数据过滤的统一视角是：从一个巨大原始集合 $R$ 中，筛出一个更接近目标分布 $T$ 的子集 $T'$。
@@ -232,3 +234,25 @@ class TinyBloom:
 3. teacher-student 过滤在工业里解决了什么成本问题？
 4. exact dedup 和 near dedup 分别处理哪类重复？
 5. MinHash + LSH 为什么能把近重复检测从不可做变成可做？
+
+## 面试常见题目
+
+1. quality filtering 为什么本质上是一个打分与采样问题？
+2. near dedup 为什么通常比 exact dedup 更难、也更关键？
+3. 为什么工业里偏爱轻量过滤器而不是处处上大模型？
+4. teacher-student 过滤链条的现实价值是什么？
+5. 如果过滤太狠，会带来什么副作用？
+
+## 面试题答题提示
+
+### 1. 过滤问题最好讲成分布逼近
+
+这比“删垃圾文本”更准确，因为很多数据处理并不是非黑即白，而是在做更接近目标训练分布的筛选。
+
+### 2. 去重要分 exact 和 near
+
+这两类问题的技术路径完全不同，前者更像哈希集合，后者才需要 MinHash、LSH 这类近似技术。
+
+### 3. 过滤系统要讲成本约束
+
+超大规模数据处理中，推理成本本身就是设计的一部分，所以轻量模型和分层打分往往更现实。

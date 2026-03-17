@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec02/>
 
+课程导航：上一讲 [01 课程总览与 Tokenization](01-overview-and-tokenization.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [03 架构与超参数](03-architectures-and-hyperparameters.md)
+
 ## 先抓住这讲要点
 
 - 真正的大模型工程，从来不是“能跑就行”，而是先问：**要多少 FLOPs、多少显存、多久能训完**。
@@ -326,3 +328,25 @@ $$
 3. view 和 copy 在 PyTorch 中的区别是什么？
 4. 为什么参数大小不足以决定模型能否训练？
 5. MFU 在工程上反映的是什么？
+
+## 面试常见题目
+
+1. 如果给你一个 7B 模型和固定 token budget，你会怎么估训练时间？
+2. 为什么混合精度能省显存，但不代表所有状态都能低精度保存？
+3. activation checkpointing 本质上在拿什么换什么？
+4. 为什么 `.contiguous()` 有时会突然导致显存尖峰？
+5. 如果单卡总是 OOM，你会按什么顺序排查？
+
+## 面试题答题提示
+
+### 1. 不要只背公式，要说用途
+
+回答资源核算问题时，最好把公式和决策连起来：它帮助你决定模型规模、batch size、并行方案和实验预算，而不只是“知道一个数字”。
+
+### 2. 显存问题一定要分桶讲
+
+尽量拆成参数、梯度、优化器状态、激活、临时 buffer 五类。这样回答会比笼统说“显存不够”更像做过训练系统。
+
+### 3. PyTorch 细节要落到 storage 和 copy
+
+像 `view`、`transpose`、`contiguous` 这些问题，核心不是 API 名字，而是谁会共享底层 storage，谁会触发真实复制。

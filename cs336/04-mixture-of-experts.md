@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec04/>
 
+课程导航：上一讲 [03 架构与超参数](03-architectures-and-hyperparameters.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [05 GPU 基础](05-gpus.md)
+
 ## 先抓住这讲要点
 
 - MoE 的本质：**让参数量增长得比 FLOPs 更快**。
@@ -233,3 +235,25 @@ MoE 的本质可以浓缩成一句话：
 3. balancing loss 的作用是什么？
 4. 为什么没有 balancing 时容易出现 dead experts？
 5. 为什么说 MoE 的一部分收益来自容量分区，而不完全来自语义路由？
+
+## 面试常见题目
+
+1. MoE 为什么不是“免费变大模型”？
+2. capacity factor 在工程上为什么重要？
+3. all-to-all 为什么会成为 MoE 训练和推理里的关键代价？
+4. shared expert 和 routed expert 分别在缓解什么问题？
+5. 什么时候 MoE 可能不如 dense 模型划算？
+
+## 面试题答题提示
+
+### 1. 回答 MoE 时一定要讲通信
+
+只讲“激活更稀疏”是不够的。MoE 最大的现实代价通常是路由、负载均衡和 all-to-all 通信。
+
+### 2. 把收益分成参数容量和计算成本两层
+
+它的吸引力在于参数量可以很大，但每个 token 的激活计算不必等比例增加。这样表述会更准确。
+
+### 3. 别把 router 讲得太神秘
+
+很多场景下，MoE 的收益不一定来自完美语义路由，而是来自把容量分到不同 expert 上后带来的更高总容量。

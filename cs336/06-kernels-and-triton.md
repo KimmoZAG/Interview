@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec06/>
 
+课程导航：上一讲 [05 GPU 基础](05-gpus.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [07 并行训练 1](07-parallelism.md)
+
 ## 先抓住这讲要点
 
 - 不要盲目手写 kernel，先 **benchmark + profile**。
@@ -243,3 +245,25 @@ softmax 是一个非常典型的 GPU 教学案例，因为它既有：
 3. Triton 相比 CUDA 的主要抽象优势是什么？
 4. benchmark 和 profile 的区别是什么？
 5. 为什么推荐先试 `torch.compile` 再决定是否手写 kernel？
+
+## 面试常见题目
+
+1. 你会如何定位一个模型里的性能热点？
+2. 什么时候适合写 Triton kernel，什么时候不适合？
+3. kernel fusion 为什么经常能带来大收益？
+4. benchmark 做得不严谨，最容易导致什么错结论？
+5. 为什么“会写 kernel”不等于“会做性能优化”？
+
+## 面试题答题提示
+
+### 1. 优化顺序比技巧更重要
+
+先 benchmark，再 profile，再改热点。这个顺序本身就是面试里很重要的工程信号。
+
+### 2. 手写 kernel 不是默认答案
+
+如果 `torch.compile`、现成 fused op、框架优化已经够用，优先用更便宜的方案。手写底层实现应该是后手。
+
+### 3. 讲 Triton 时要落在抽象边界
+
+它的优势是更适合写块级并行、tile 级操作和快速实验，而不是“比 CUDA 高级所以一定更快”。

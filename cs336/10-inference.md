@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec10/>
 
+课程导航：上一讲 [09 Scaling law 基础](09-scaling-laws-fundamentals.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [11 Scaling law 案例](11-scaling-laws-case-studies.md)
+
 ## 先抓住这讲要点
 
 - 推理优化关心的不是训练 loss，而是服务指标：**TTFT、latency、throughput、并发能力、成本**。
@@ -264,3 +266,25 @@ def speculative_step(draft_model, target_model, prompt):
 3. KV cache 带来了哪些收益，又引入了哪些新问题？
 4. GQA / MLA / CLA 在系统收益上共同指向什么目标？
 5. speculative decoding 的速度提升，为什么本质上是在减少目标模型的串行推进次数？
+
+## 面试常见题目
+
+1. 为什么推理系统的瓶颈经常和训练系统完全不同？
+2. paged KV / allocator 优化在解决什么现实问题？
+3. 为什么高并发下调度策略会和单请求最优策略不一样？
+4. 如果长上下文吞吐掉得很厉害，你会优先排查什么？
+5. 推理优化里“少存、少搬、少等”分别对应哪些手段？
+
+## 面试题答题提示
+
+### 1. 指标一定要分开讲
+
+TTFT、总时延、吞吐、并发能力不是同一个目标。很多优化是在牺牲一个指标换另一个指标。
+
+### 2. 把 KV cache 讲成系统中心
+
+因为它同时决定显存占用、带宽压力、长上下文扩展性和调度复杂度，这是推理问题最好的统一入口。
+
+### 3. decode 的核心是 memory system
+
+只从 FLOPs 角度解释 decode 为什么慢，通常不够。更关键的是历史状态读取和访存布局。

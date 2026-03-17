@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec17/>
 
+课程导航：上一讲 [16 对齐 2](16-alignment-rl.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)
+
 ## 先抓住这讲要点
 
 - 在 outcome-reward 场景下，语言模型 RL 最朴素的理解就是：**让高 reward 的回答概率变大，让低 reward 的回答概率变小**。
@@ -241,3 +243,25 @@ PPO 里的 clipping 可以粗略理解成：
 3. clip 和 KL 各自控制了哪类不稳定性？
 4. 为什么 old policy 必须被冻结？
 5. rollout 成本为什么会成为 LLM RL 的现实瓶颈？
+
+## 面试常见题目
+
+1. 为什么 policy gradient 在直觉上像“按 reward 加权的监督学习”？
+2. baseline 为什么不会改偏梯度期望？
+3. PPO 里的 clip 和 KL 为什么常常要同时出现？
+4. old policy 不冻结会发生什么？
+5. 为什么 LLM RL 的成本经常卡在 rollout 而不是反向传播？
+
+## 面试题答题提示
+
+### 1. 这讲要讲清统计直觉
+
+不要只背公式，重点是说明 reward、log-prob、baseline、old policy 各自在控制什么不稳定性。
+
+### 2. baseline 的关键词是降方差
+
+它不是在修改目标，而是在不改变梯度期望方向的前提下，让估计更稳定。
+
+### 3. PPO 问题要落到训练稳定性
+
+clip 控制单步更新过大，KL 控制策略分布漂移，这两者共同防止语言模型训练发散或分布崩坏。

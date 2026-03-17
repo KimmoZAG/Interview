@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec01/>
 
+课程导航：课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [02 PyTorch 与资源核算](02-pytorch-and-resource-accounting.md)
+
 ## 先抓住这讲要点
 
 - 学大模型不能只停留在 API 调用层，必须把**模型、数据、系统**三个栈串起来。

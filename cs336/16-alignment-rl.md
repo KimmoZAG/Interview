@@ -2,6 +2,8 @@
 
 原始来源：<https://tuananhbui89.github.io/blog/2025/cs336-lec16/>
 
+课程导航：上一讲 [15 对齐 1](15-alignment-sft-rlhf.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [17 对齐 3](17-alignment-rl-part2.md)
+
 ## 先抓住这讲要点
 
 - RLHF 难的从来不是把目标函数写出来，而是**偏好噪声、奖励错配、过优化、方差控制和实现复杂度**。
@@ -225,3 +227,25 @@ def group_advantages(rewards):
 3. reward hacking 的根源是什么？
 4. verifiable reward 为什么特别适合数学、代码这类任务？
 5. GRPO 的 group baseline 在直觉上帮助解决了什么问题？
+
+## 面试常见题目
+
+1. 为什么 DPO 能在很多场景下替代更复杂的 PPO 流程？
+2. RLHF 系统为什么经常难在工程闭环，而不是单个 loss？
+3. reward hacking 为什么在开放式任务里更容易出现？
+4. verifiable reward 的适用边界在哪里？
+5. PPO、DPO、GRPO 各自更像在优化什么信号？
+
+## 面试题答题提示
+
+### 1. DPO 的优势要讲成工程简化
+
+它不是“更高级的 RL”，而是绕过显式 reward model 和 rollout 闭环，让训练更接近监督学习。
+
+### 2. RLHF 问题要讲系统闭环
+
+采样、打分、训练、KL 控制、参考模型、回放数据，这一整套闭环才是复杂度来源。
+
+### 3. verifiable reward 要讲适用任务类型
+
+它特别适合数学、代码、形式化约束这类可自动判定正确性的任务，不要泛化成对所有开放问题都有效。
