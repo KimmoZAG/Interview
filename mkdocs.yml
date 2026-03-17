@@ -85,6 +85,10 @@ nav:
 
   - CS336:
     - cs336/00-index.md
+    - 导读:
+      - 课程介绍: cs336/README.md
+      - 学习路线图: cs336/study-roadmap.md
+      - 面试准备指南: cs336/interview-prep-guide.md
     - 课程笔记:
       - 01 课程总览与 Tokenization: cs336/01-overview-and-tokenization.md
       - 02 PyTorch 与资源核算: cs336/02-pytorch-and-resource-accounting.md
@@ -106,6 +110,7 @@ nav:
 
   - AI Infra:
     - ai-infra/00-index.md
+    - 导读: ai-infra/README.md
     - 算子优化:
       - ai-infra/01-operator-optimization/00-index.md
       - 张量与内存布局: ai-infra/01-operator-optimization/01-tensors-shapes-layout.md
@@ -156,6 +161,7 @@ nav:
 
   - C++:
     - c++/00-index.md
+    - 导读: c++/README.md
     - 通用知识:
       - 工具链与构建: c++/general/01-toolchain-and-build.md
       - 对象生命周期与值语义: c++/general/02-object-lifetime-and-value-semantics.md
@@ -174,3 +180,6 @@ nav:
       - 术语表: c++/appendix/glossary.md
       - 坑位清单: c++/appendix/gotchas.md
       - 参考资料: c++/appendix/references.md
+
+  - 参考资料:
+    - CS336 原始讲义链接: reference/cs336.md
