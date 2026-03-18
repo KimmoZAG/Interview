@@ -1,5 +1,17 @@
 # Collectives：all-reduce / all-gather / reduce-scatter / all-to-all
 
+## 核心定义（What & Why）
+
+> **一句话总结**：Collectives 是多卡系统里最常见的一组协同通信原语，它们解决的是“多张卡如何交换与汇总数据”，也是并行训练和多卡推理性能最容易暴露瓶颈的地方。
+
+## 关联知识网络
+
+- 前置：[`通信基础`](02-communication-foundations.md)
+- 平行：[`并行训练策略`](01-training-parallelism.md)
+- 延伸：[`并行到通信映射`](05-parallelism-to-communication.md)
+- 模型相关：[`MoE 最小导读`](../03-llm-architecture/06-moe-minimum.md)
+- 系统落地：[`LLM Serving`](../02-inference-engine/04-llm-serving.md)
+
 ## 要点
 
 - 大模型系统里“通信很慢”通常并不抽象，最后几乎都会落到几个具体 collective 上。
@@ -48,6 +60,15 @@ collective 是多参与方同时参与的一类通信操作。常见的包括：
 
 这就是为什么 DP 更像“阶段末同步一次大梯度”，而 TP 更像“层间更频繁同步激活或局部结果”。
 
+## 对比表
+
+| Collective | 核心作用 | 常见场景 | 典型风险 |
+|---|---|---|---|
+| all-reduce | 归约后所有参与方都拿到结果 | DDP 梯度同步 | 小消息过多、同步点密集 |
+| all-gather | 收集所有分片拼成完整结果 | TP 激活或参数分片拼接 | 带宽压力大，峰值内存上升 |
+| reduce-scatter | 先归约再把结果切分回各卡 | ZeRO / FSDP 等切分优化 | 次数多时容易被延迟主导 |
+| all-to-all | 各卡彼此交换不同分片 | MoE token dispatch | 负载不均、长尾 rank 抖动 |
+
 ## 工程例子
 
 如果一个训练任务表现为：
@@ -62,6 +83,19 @@ collective 是多参与方同时参与的一类通信操作。常见的包括：
 - 通信与计算没有 overlap 起来
 
 这种情况下，减少 collective 频次有时比优化单次 collective 更有效。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> Watchdog caught collective operation timeout
+
+- **现象**：并行训练并没有完全挂死，但 step time 周期性拉长，最终触发 NCCL 超时。
+- **误判**：一开始容易怪某张 GPU 慢，或者怀疑单次 all-reduce 的实现有 bug。
+- **根因**：更常见的情况是 collective 次数过多、小消息太碎，或者某个 rank 因为数据分布 / MoE dispatch 不均而形成长尾。
+- **解决动作**：
+	- 先看是哪一种 collective 在超时；
+	- 再分清是单次太大，还是次数太多；
+	- 然后检查 bucket、overlap 和负载均衡，而不是只盯带宽峰值。
+- **复盘**：通信问题经常不是“总量大”，而是“同步点多、消息碎、尾巴长”。
 
 ## 推理优化工程师视角
 

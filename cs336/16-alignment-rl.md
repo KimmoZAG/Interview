@@ -4,6 +4,8 @@
 
 课程导航：上一讲 [15 对齐 1](15-alignment-sft-rlhf.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [17 对齐 3](17-alignment-rl-part2.md)
 
+工程桥接：[`AI Infra / Post-training 与 Alignment`](../ai-infra/05-appendix/post-training-and-alignment.md)｜[`AI Infra / 评测与基准`](../ai-infra/03-llm-architecture/05-evaluation-and-benchmarking.md)｜[`AI Infra / 可观测性与调试`](../ai-infra/02-inference-engine/06-observability-and-debugging.md)
+
 ## 先抓住这讲要点
 
 - RLHF 难的从来不是把目标函数写出来，而是**偏好噪声、奖励错配、过优化、方差控制和实现复杂度**。
@@ -16,6 +18,18 @@
 这一讲进一步解决的是：
 
 > 当我们已经有偏好数据或奖励信号之后，具体该怎么优化 policy？为什么 PPO 很重，DPO 为什么更“工程友好”，GRPO 又在改什么？
+
+## 为什么这页是对齐工程的分水岭
+
+第 15 讲更像是在讲“为什么要做 post-training”；这一讲则开始进入真正的工程分歧：
+
+- 你是要一条更完整但更重的 RL 管线；
+- 还是要更轻、更容易调试的 preference optimization；
+- 或者在可验证任务里，把 reward 尽量程序化。
+
+这也是很多面试会卡人的地方：
+
+> 你不能只背 `PPO / DPO / GRPO` 的名字，而要能说清它们在系统复杂度、数据依赖、奖励可靠性上的 trade-off。
 
 ## 这讲想训练你什么能力
 
@@ -152,6 +166,25 @@ pair = {
 
 所以在代码、数学等任务上，verifiable reward 往往比纯偏好信号更适合做大规模 RL。
 
+## Troubleshooting：为什么 RL / 偏好优化上线后效果不稳
+
+| 现象 | 第一怀疑点 | 如何验证 |
+|---|---|---|
+| 训练 loss 很漂亮，但真实体验提升弱 | 奖励信号和真实用户偏好错位 | 做人工偏好复核，检查 judge / verifier 与用户目标是否一致 |
+| PPO 训练非常不稳定 | rollout 成本高、advantage 噪声大、KL 控制失衡 | 看 reward 分布、KL 曲线、有效 batch 与采样长度 |
+| DPO 训练很顺，但模型回答越来越模式化 | preference pairs 覆盖窄，负样本过弱 | 检查 chosen/rejected 多样性与 prompt 覆盖范围 |
+| verifier reward 很高，但开放式任务表现变差 | 过度针对可验证目标优化，迁移性不足 | 分离“可验证任务集”和“开放式任务集”评测 |
+
+### 一个工程上很常见的误判
+
+如果某个方法在离线 reward 上涨得很快，并不自动等于它真的更好。很多时候只是模型更会“迎合你当前的 judge”。
+
+因此对齐训练后的结论，最好至少拆成三层：
+
+1. reward / 偏好指标有没有提升；
+2. 通用评测和回归样例有没有守住；
+3. 线上行为是否出现更冗长、更保守或更投机的副作用。
+
 ## GRPO 在改什么
 
 GRPO 这类方法的重要动机之一，是想减少 PPO 一些重组件的依赖，同时尽量保持可用的优化信号。  
@@ -205,6 +238,22 @@ def group_advantages(rewards):
 所以不是谁永远更先进，而是：
 
 > 你的奖励从哪里来、系统复杂度能承受多少、任务是否可验证，这些才决定方法选择。
+
+## AI Infra / 系统选型视角
+
+把这页和前面的训练、评测、推理页连起来看，会更容易理解方法选择的真实依据：
+
+- **PPO**：适合你愿意为更强控制力支付更高系统复杂度的时候；
+- **DPO**：适合你已经有一批相对可靠的 preference pairs，想快速稳定迭代；
+- **GRPO / group-based RL**：适合可以对同题多采样、并拿到组内相对 reward 的场景；
+- **verifiable reward**：最适合代码、数学、结构化生成这类“能自动判对错”的任务。
+
+从平台角度，真正决定方法的常常不是“论文里哪个更火”，而是：
+
+1. 你是否有高质量偏好数据；
+2. 你是否能承受 rollout 与 judge 成本；
+3. 你的 reward 是否足够稳定，能避免大规模 reward hacking；
+4. 训练完成后，是否有一套评测和可观测性闭环接住它。
 
 ## 面试里可以怎么讲
 

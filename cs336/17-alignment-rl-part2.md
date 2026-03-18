@@ -4,6 +4,8 @@
 
 课程导航：上一讲 [16 对齐 2](16-alignment-rl.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)
 
+工程桥接：[`AI Infra / Post-training 与 Alignment`](../ai-infra/05-appendix/post-training-and-alignment.md)｜[`AI Infra / 可观测性与调试`](../ai-infra/02-inference-engine/06-observability-and-debugging.md)｜[`AI Infra / 推理优化 Playbook`](../ai-infra/02-inference-engine/05-optimization-playbook.md)
+
 ## 先抓住这讲要点
 
 - 在 outcome-reward 场景下，语言模型 RL 最朴素的理解就是：**让高 reward 的回答概率变大，让低 reward 的回答概率变小**。
@@ -18,6 +20,17 @@
 它回答的是：
 
 > policy gradient 到底在优化什么？baseline 为什么这么重要？clip 和 KL 为什么几乎总是出现？
+
+## 为什么这页值得反复看
+
+很多人到 `17` 讲时会觉得“这不就是 RL 公式展开吗”。但对工程面试来说，这页反而很关键，因为它能把很多术语重新落回实现直觉：
+
+- `reward * logprob` 到底在干什么；
+- baseline 为什么是降方差，而不是改目标；
+- old policy、clip、KL 分别在拦哪种灾难；
+- 为什么 LLM RL 最终经常卡在 rollout、judge 和不稳定性，而不是单个 loss 写不出来。
+
+如果你能把这页讲顺，前面的 `15 / 16` 就不再只是方法名列表，而会变成一套连贯的训练机制。
 
 ## 这讲想训练你什么能力
 
@@ -170,6 +183,25 @@ PPO 里的 clipping 可以粗略理解成：
 
 所以工程实现里，old policy 基本都要 `no_grad` 或显式冻结。
 
+## Troubleshooting：为什么 policy gradient 实现容易“看起来没错，训起来发疯”
+
+| 现象 | 第一怀疑点 | 如何验证 |
+|---|---|---|
+| reward 明明有提升，但策略突然崩坏 | update 过猛，clip / KL 约束不足 | 看 ratio 分布、KL 曲线和回答长度变化 |
+| 训练极不稳定，batch 间波动巨大 | baseline 太弱或 reward 稀疏 | 看 advantage 分布、正负样本比例、组内方差 |
+| PPO 实现和论文一致，但结果复现不了 | old policy 未真正冻结，或 logprob 计算不一致 | 检查 `no_grad`、缓存 logits、reference policy 版本 |
+| rollout 成本爆炸，训练几乎跑不动 | 序列太长、采样过多、judge 太慢 | 分解 profiling：采样、打分、反传分别占多少时间 |
+
+### 这页最该建立的排障习惯
+
+不要一上来盯 loss 曲线，而要先盯三类曲线：
+
+1. reward / advantage 分布；
+2. KL / ratio / answer length；
+3. rollout 吞吐、judge 延迟和有效 batch。
+
+因为 RL for LLM 的很多坏味道，本质上都是“优化信号、分布约束、系统开销”三者没有一起被监控。
+
 ## GRPO / PPO 本质上在解决什么
 
 你可以把这些方法统一理解成：
@@ -189,6 +221,21 @@ PPO 里的 clipping 可以粗略理解成：
 - 用多样本比较获得更稳的相对信号。
 
 也就是说，这些方法不是在推翻 policy gradient，而是在给它加护栏。
+
+## AI Infra / 训练系统视角
+
+如果从系统角度看，第 17 讲真正解释的是：
+
+> 为什么对齐训练不是“把一个 RL loss 接到模型上”这么简单，而是一整条高成本、强耦合、易失稳的训练流水线。
+
+它和前面课程的连接关系大致是：
+
+- 和 `05 GPU`、`06 Kernel` 相连：rollout、judge、长序列反传都很吃算力和内存；
+- 和 `07/08 并行` 相连：RL 训练不只要训得动，还要采样、打分、同步一起配合；
+- 和 `12 评测` 相连：reward 上升不代表真实质量、成本和稳定性就一定更好；
+- 和 `10 推理优化` 相连：最终产品表现会同时被 post-training 和 serving 配置共同塑造。
+
+所以这页虽然讲的是公式直觉，但真正的落点其实是“训练系统如何不失控”。
 
 ## 工程实现里的几个坑
 

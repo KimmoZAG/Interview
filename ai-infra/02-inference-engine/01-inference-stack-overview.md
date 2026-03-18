@@ -1,5 +1,18 @@
 # 推理栈全景：前端→图→kernel→执行
 
+## 核心定义（What & Why）
+
+> **一句话总结**：推理栈全景回答的是“一个请求从模型语义一路落到硬件执行，到底经过了哪些层”，它解决的是为什么同一个线上症状可能分别来自前端、图优化、编译缓存、runtime 调度或 serving 队列等完全不同的层次。
+
+## 关联知识网络
+
+- 延伸：[`LLM Serving`](04-llm-serving.md)
+- 延伸：[`推理优化 Playbook`](05-optimization-playbook.md)
+- 排障：[`可观测性与调试`](06-observability-and-debugging.md)
+- 平行：[`图编译：TVM / MLIR / XLA`](03-graph-compiler-tvm-mlir-xla.md)
+- 平行：[`Runtime：ONNX Runtime / TensorRT`](02-runtime-onnxruntime-tensorrt.md)
+- 课程桥接：[`CS336 / 10 推理优化`](../../cs336/10-inference.md)
+
 ## 要点
 
 - 把推理系统拆成 4 层更容易定位问题：**模型前端 → 中间表示(IR/图) → 编译/优化 → 执行时(runtime)**
@@ -62,6 +75,18 @@
 2. 模型被翻译成什么中间表示
 3. 这个表示被优化成什么执行计划
 4. 这个计划最终如何在设备上跑起来
+
+## Mermaid：推理栈的最小分层图
+
+```mermaid
+flowchart TD
+  A[模型前端\nPyTorch / JAX / TF] --> B[图 / IR\nONNX / TorchScript / StableHLO]
+  B --> C[编译 / 优化\n融合 / 量化 / 代码生成]
+  C --> D[Runtime / Serving\n调度 / KV / allocator / batching]
+  D --> E[Prefill / Decode / 输出]
+
+  D -.观测.-> F[Metrics / Trace / Profiler]
+```
 
 ## 再细一层：LLM 推理的最小请求生命周期
 
@@ -137,6 +162,15 @@
 - 再进入 decode 循环不断出 token
 - 同时 runtime 管理 cache、batching 和调度
 
+## 对比表：问题落在不同层时，动作为什么完全不同
+
+| 层 | 更常见的问题 | 常见症状 | 更像的动作 |
+|---|---|---|---|
+| 前端 | tokenize、输入校验、权重加载 | 首次请求慢、CPU 热点高 | 预热、缓存、线程池优化 |
+| 图 / IR | shape/dtype/layout 不稳、图优化缺失 | kernel 数异常多、fallback | 导出修正、图优化验证 |
+| 编译 / 优化 | compile cache 未命中、特化失败 | 冷启动重、首轮抖动 | 预编译、缓存、特化策略 |
+| Runtime / Serving | batching、KV、allocator、同步 | TTFT / TPOT / p99 异常 | 调度、cache、内存管理优化 |
+
 ## 为什么 CS336 会把 inference 单独拎出来讲
 
 因为在线推理不是“训练时 forward 的一个子集”，而是一套独立系统：
@@ -180,6 +214,18 @@
 - tokenize 在线程池里争用严重
 
 所以你如果没有按推理栈分层看问题，就很容易把 serving 问题误诊成 kernel 问题，或者把编译缓存问题误诊成模型问题。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：线上首 token 很慢，团队第一反应是 attention kernel 不够快。
+
+- **误判**：直接把问题归到最“显眼”的算子层。
+- **根因**：真实根因可能完全不在 kernel——比如编译缓存未命中、请求排队在长 prompt 后、tokenize 线程争用、或者 runtime fallback 到了意外路径。
+- **解决动作**：
+  - 先拆阶段：预处理 / prefill / decode / 后处理；
+  - 再沿栈逐层问：前端、图、编译、runtime 哪一层先出现异常；
+  - 最后才决定是改 kernel、改缓存，还是改调度。
+- **复盘**：推理栈最大的价值，不是给你 4 个层名，而是让你不再把所有“慢”都怪到一个地方去。
 
 ## 推理优化工程师视角
 

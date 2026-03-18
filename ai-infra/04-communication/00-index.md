@@ -21,6 +21,14 @@
 - [并行策略与通信映射：DP / TP / PP / SP / FSDP / ZeRO](05-parallelism-to-communication.md)
 - [训练并行策略：DP / TP / PP / FSDP / ZeRO](01-training-parallelism.md)
 
+## 已完成“实战型重构”的核心页
+
+- [通信基础：latency / bandwidth / topology](02-communication-foundations.md)
+- [硬件互联：PCIe / NVLink / NVSwitch / InfiniBand / RDMA](03-interconnects-and-topology.md)
+- [训练并行策略：DP / TP / PP / FSDP / ZeRO](01-training-parallelism.md)
+- [Collectives：all-reduce / all-gather / reduce-scatter / all-to-all](04-collectives.md)
+- [并行策略与通信映射：DP / TP / PP / SP / FSDP / ZeRO](05-parallelism-to-communication.md)
+
 ## 推荐阅读顺序
 
 1. 先读 `02-communication-foundations.md`，建立 latency / bandwidth / topology 的语言体系

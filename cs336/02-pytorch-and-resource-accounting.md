@@ -4,6 +4,20 @@
 
 课程导航：上一讲 [01 课程总览与 Tokenization](01-overview-and-tokenization.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [03 架构与超参数](03-architectures-and-hyperparameters.md)
 
+工程桥接：[`AI Infra / 训练资源核算`](../ai-infra/03-llm-architecture/07-training-resource-accounting.md)｜[`AI Infra / 张量、shape 与内存布局`](../ai-infra/01-operator-optimization/01-tensors-shapes-layout.md)｜[`AI Infra / 并行训练策略`](../ai-infra/04-communication/01-training-parallelism.md)
+
+## 核心定义（What & Why）
+
+> **一句话总结**：资源核算是在训练开始前把模型翻译成 FLOPs、显存、时间和吞吐的预算问题，它解决的是“实验能不能做、做得起、做多久”的工程边界判断。
+
+## 关联知识网络
+
+- 前置：[`01 课程总览与 Tokenization`](01-overview-and-tokenization.md)
+- 延伸：[`05 GPUs`](05-gpus.md)
+- 延伸：[`07 并行训练（一）`](07-parallelism.md)
+- 平行：[`AI Infra / 训练资源核算`](../ai-infra/03-llm-architecture/07-training-resource-accounting.md)
+- 系统关联：[`AI Infra / 张量与内存布局`](../ai-infra/01-operator-optimization/01-tensors-shapes-layout.md)
+
 ## 先抓住这讲要点
 
 - 真正的大模型工程，从来不是“能跑就行”，而是先问：**要多少 FLOPs、多少显存、多久能训完**。
@@ -56,6 +70,16 @@ $$
 
 ### 2. 训练时间为什么经常先看 6 倍规则
 
+很多人会背这个式子：
+
+$$
+    ext{Training FLOPs} \approx 6PN
+$$
+
+但面试里更加分的答法是：**能把这个 6 讲出来，而不是只把式子背出来。**
+
+#### 为什么偏偏是 6PN？
+
 对一个常见的 dense 线性层，前向大致需要：
 
 $$
@@ -90,6 +114,12 @@ $$
 - $P$ 是参数量；
 - $N$ 是训练 token 数。
 
+你可以把它记成：
+
+- 前向：约 `2PN`
+- 反向：约 `4PN`
+- 总计：约 `6PN`
+
 ### 3. 为什么这个公式有用
 
 它最大的价值不是“精确”，而是“快”。
@@ -98,7 +128,7 @@ $$
 
 - 7B 参数模型；
 - 300B tokens；
-- 有效算力 $= 5 \times 10^{14}$ FLOPs/s。
+- 单张有效算力约 `400 TFLOPs/s`。
 
 那你可以立刻估算：
 
@@ -110,11 +140,29 @@ $$
 训练时间大约：
 
 $$
-\frac{1.26 \times 10^{22}}{5 \times 10^{14}} = 2.52 \times 10^7 \text{ s}
+\frac{1.26 \times 10^{22}}{400 \times 10^{12}} \approx 3.15 \times 10^7 \text{ s}
 $$
 
-也就是数百天量级。  
+也就是约 `364 天`。  
 然后你就知道：哦，这不是“我晚上跑一下”的实验，这是要上集群、要并行、要重新估预算的实验。
+
+### 🛠️ 实战演练：公式不是拿来背的，是拿来劝退单卡幻想的
+
+如果面试官问你：
+
+> 训一个 `7B` 模型、`300B` tokens 数据，单张 H100 的有效算力按 `400 TFLOPs` 算，大概要多久？
+
+你完全可以现场这样推：
+
+1. 总训练量：`6PN = 1.26 × 10^22 FLOPs`
+2. 单卡有效算力：`400 × 10^12 FLOPs/s`
+3. 总时间：约 `3.15 × 10^7 s ≈ 364 天`
+
+工程结论比数字更重要：
+
+- **单卡不可能完成；**
+- **必须上分布式集群；**
+- **并且真正的项目问题会立刻转成 MFU、并行效率、容错和预算问题。**
 
 ## 代码拆解：参数与训练时间估算
 
@@ -151,6 +199,16 @@ def estimate_adam_memory(num_params, bytes_per_param=2, master_bytes=4):
 - **计算时尽量低精度**；
 - **关键状态尽量高精度**。
 
+## 对比表：训练显存的大头都是什么
+
+| 项目 | 为什么需要 | 常见增长来源 | 优化思路 |
+|---|---|---|---|
+| 参数 | 前向 / 反向都要用到 | 模型规模增大 | 混合精度、分片、量化加载 |
+| 梯度 | 反向传播后的更新依据 | 参数量增大 | gradient accumulation、分片 |
+| 优化器状态 | Adam 等需要额外历史信息 | 参数量增大，Adam 特别重 | ZeRO / FSDP、换优化器 |
+| 激活 | 反向需要中间结果 | batch、seq、hidden、layers 增大 | checkpointing、重算、sequence parallel |
+| 临时 buffer | kernel workspace、布局转换等 | kernel 选择、contiguous/copy | fuse、改 layout、减少复制 |
+
 ## 显存为什么总比你想象中更紧张
 
 很多人第一次估算显存时，只会算：
@@ -173,6 +231,37 @@ $$
 - 一阶矩 $m$
 - 二阶矩 $v$
 - 有时还会有 master weight
+
+### Adam 的 16 Bytes/Param 定律
+
+在主流的 **BF16/FP16 + Adam** 训练配置里，一个参数对应的静态显存，常常可以粗估成：
+
+| 组成 | 常见精度 | 每参数字节数 |
+|---|---|---:|
+| 模型参数 | BF16 / FP16 | 2 Bytes |
+| 梯度 | BF16 / FP16 | 2 Bytes |
+| Master Weight | FP32 | 4 Bytes |
+| 一阶矩 $m$ | FP32 | 4 Bytes |
+| 二阶矩 $v$ | FP32 | 4 Bytes |
+| **合计** |  | **16 Bytes / Param** |
+
+这条规律特别好用，因为它能把“Adam 很占显存”这种模糊印象，直接变成资源账。
+
+### 一个 7B 模型的量级直觉
+
+如果只看静态部分：
+
+$$
+7 \times 10^9 \times 16 \text{ Bytes} \approx 112 \text{ GB}
+$$
+
+这还**没算 activation 和临时 buffer**。
+
+所以工程判断会非常直接：
+
+- 参数文件本身也许只有十几 GB；
+- 但真正训练时，单张 `80G` 卡连静态账都未必撑得住；
+- 要么切分状态，要么分片训练，要么重新设计 batch / context / optimizer 策略。
 
 所以很多时候，真正的总显存占用更像：
 
@@ -200,6 +289,10 @@ PyTorch tensor 不只是一个数组，它更准确地说是：
 - 一块 storage；
 - 加上一组 shape / stride / dtype / device 元数据。
 
+你也可以把它记成：
+
+> **Tensor = Storage（物理存储） + Metadata（逻辑视图）**
+
 这带来一个非常重要的结论：
 
 - 有些操作只改视图，不拷贝数据；
@@ -224,6 +317,19 @@ z = y.contiguous()        # 这里可能真实复制一份新内存
 
 ### 为什么这件事重要
 
+这里最值得建立的不是 API 记忆，而是底层机制直觉：
+
+- `x.t()` 常常只是修改 metadata 里的 `stride`；
+- 所以 `y` 只是换了一种“读这块 storage 的方式”；
+- 但 `z = y.contiguous()` 如果要求物理连续布局，就往往会新开一块内存，把数据重新抄一遍。
+
+也就是说：
+
+- **View**：便宜，通常不额外占大块显存；
+- **Contiguous copy**：昂贵，可能制造显存尖峰和额外带宽开销。
+
+这也是为什么很多“显存怎么突然涨了”的问题，最后都不是模型结构出了事，而是 layout / copy 路径在偷偷加税。
+
 如果你在大张量上频繁触发不必要的 copy：
 
 - 显存会涨；
@@ -231,6 +337,16 @@ z = y.contiguous()        # 这里可能真实复制一份新内存
 - kernel 的输入 layout 也可能变差。
 
 这就是为什么真正做性能优化时，layout 和 contiguity 不是小事。
+
+### 面试回答套路
+
+如果面试官问：
+
+> 为什么我的显存会突然出现不可解释的尖峰？
+
+一个非常工程化的回答是：
+
+> 我会先排查是不是触发了隐式或不必要的物理内存 copy，比如对非连续张量频繁调用 `contiguous()`、`reshape()` 失败后回退成 copy，或者 CPU/GPU 之间的重复搬运。很多时候问题不在 CUDA 本身，而在 tensor layout 和 storage 共享关系被打断了。
 
 ## Device placement：为什么“在哪儿算”比“怎么算”还关键
 
@@ -246,6 +362,22 @@ z = y.contiguous()        # 这里可能真实复制一份新内存
 - 不要把 data movement 当成“顺便发生的小事”。
 
 因为很多时候，你以为在优化算力，结果真正卡住你的其实是 PCIe / HBM 带宽。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：按参数量估算模型“应该能放进 80GB 卡”，但训练一跑就 OOM。
+
+- **误判**：只算了 `params × bytes`，把“参数能放下”当成“训练能跑”。
+- **根因**：漏掉了梯度、Adam 状态、激活和临时 buffer；同时某些 `contiguous()` / layout 变换还会制造显存尖峰。
+- **解决动作**：
+    - 先按 `参数 / 梯度 / 优化器状态 / 激活 / 临时 buffer` 五类拆账；
+    - 再看 OOM 发生在前向、反向还是 optimizer step；
+    - 最后决定是降 batch、开 checkpointing、换精度策略，还是上分片并行。
+- **复盘**：资源核算最大的价值，不是给出一个精确数字，而是让你知道“哪一类成本正在爆”。
+
+> 常见异常：`.contiguous()` 之后显存突然上涨。
+
+- 这通常说明原 tensor 只是 view，而你在强制把它变成一块新的连续内存；张量越大，这类复制越像隐形炸弹。
 
 ## Matmul 为什么是核算中心
 

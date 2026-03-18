@@ -4,6 +4,8 @@
 
 课程导航：上一讲 [10 推理优化](10-inference.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [12 评测](12-evaluation.md)
 
+工程桥接：[`AI Infra / 训练资源核算`](../ai-infra/03-llm-architecture/07-training-resource-accounting.md)｜[`AI Infra / 数据混配与 Curriculum`](../ai-infra/05-appendix/data-mixing-and-curriculum.md)｜[`AI Infra / 评测与基准`](../ai-infra/03-llm-architecture/05-evaluation-and-benchmarking.md)
+
 ## 先抓住这讲要点
 
 - 真正可落地的 scaling workflow，不只是“画一条 log-log 直线”，而是 **稳定参数化 + 可迁移超参 + 合理训练日程 + 小模型代理实验 + 大模型确认** 的完整流程。
@@ -24,6 +26,18 @@
 - 如何让小模型实验更能代表大模型；
 - 如何让不同 token budget 的实验比较更公平；
 - 如何减少因为参数化和 schedule 造成的结论漂移。
+
+## 为什么这页比“记住几篇论文”更重要
+
+这一讲真正的价值，不在于你能不能背出 `MUP`、`WSD` 这些名字，而在于你能不能把它们翻译成实验方法论：
+
+- `MUP` 在解决超参跨宽度迁移；
+- `WSD` 在解决训练轨迹的可比较性；
+- `checkpoint rewinding` 在解决已花训练成本的复用。
+
+所以这页其实是在补第 9 讲缺的最后一环：
+
+> 不是“知道应该外推”，而是“知道怎样把外推做得没那么不靠谱”。
 
 ## 这讲想训练你什么能力
 
@@ -181,6 +195,25 @@ def wsd(step, warmup, stable_end, total, lr):
 
 > token/param 比例不是圣经，而是某一类模型、某一套数据、某一种训练方法下得到的经验解。
 
+## Troubleshooting：为什么 case study 学完了，自己的 scaling 实验还是不稳
+
+| 现象 | 第一怀疑点 | 如何验证 |
+|---|---|---|
+| 小模型调好的学习率到大模型就失效 | 参数化和更新尺度不可迁移 | 对比不同宽度下 loss、梯度范数和稳定区间 |
+| 不同 token budget 实验很难公平比较 | schedule 阶段不清晰，训练切片不可比 | 统一 warmup / stable / decay，并记录 checkpoint |
+| 复用 checkpoint 后结果很乱 | rewind 点选在不稳定区间 | 尽量从 WSD 的 stable 段 checkpoint 开始比较 |
+| 不同论文结论互相矛盾 | 训练配方、数据、评测目标不一致 | 先对齐实验设定，再比较结论 |
+
+### 一个特别常见的误区
+
+很多人会把 case study 读成“别人已经帮我算出最优比例了”。
+
+但更稳妥的理解应该是：
+
+1. 这些案例提供的是方法；
+2. 不是替你消灭数据、架构和 schedule 差异；
+3. 所以最终还是要回到你自己的训练配方上做小规模验证。
+
 ## 一个更完整的 scaling workflow 长什么样
 
 把这一讲和第 9 讲连起来，一个成熟的 workflow 往往像这样：
@@ -195,6 +228,21 @@ def wsd(step, warmup, stable_end, total, lr):
 
 这和“画一条线就相信世界”的差别非常大。  
 前者是工程方法论，后者更像美图秀秀科研版。
+
+## AI Infra / 实验平台视角
+
+如果把这页放回完整工程上下文，它其实在解释一件很实际的事：
+
+> 为什么成熟团队会把“参数化方式、训练日程、checkpoint 策略”当成实验平台能力，而不是研究员个人手艺。
+
+因为没有这些基础设施：
+
+- 小模型很难代表大模型；
+- token budget 对比会失真；
+- 历史 checkpoint 很难复用；
+- scaling 结论就会反复受训练配方抖动干扰。
+
+所以从平台建设角度，这页是在讲如何让“实验本身”变得更可迁移、更可比较、更可复用。
 
 ## 面试里可以怎么讲
 

@@ -1,90 +1,72 @@
 # 内存层级与性能模型（Roofline）
 
-## 要点
+## 一句话先讲清
 
-- 用 roofline 把问题先粗分：**带宽受限** vs **算力受限**
-- 性能优化要“有证据”：先测，再改，再验证
-- CS336 的 GPU / inference 相关内容都可以放回 roofline 视角重新理解：很多优化动作本质上是在改变 Bytes，而不是改变 FLOPs
-- roofline 最有价值的地方，不是公式本身，而是它能把“为什么慢”先粗分成一两类正确方向。
+Roofline 最有价值的地方，不是画出一张很酷的图，而是先把“为什么慢”粗分成两个方向：**更像算力受限，还是更像带宽受限。**
 
-## 通用知识
+很多优化动作本质上不是在“让公式更高级”，而是在改变 **Bytes**、改变数据复用、或者让硬件更接近上限。
 
-### 它是什么
+## 关联知识网络
 
-roofline 是一种性能分析视角，用来把一个算子的实际性能放到两类上限之间看：
+- 输入与 layout：[`张量、shape 与内存布局`](01-tensors-shapes-layout.md)
+- 执行模型：[`Kernel 与并行基础（SIMD/SIMT）`](02-kernel-execution-model.md)
+- 图融合：[`计算图、融合与调度`](04-graph-fusion-scheduling.md)
+- 量化：[`量化基础（INT8/INT4）与误差`](05-quantization-basics.md)
+- 典型实例：[`FlashAttention 与 IO-aware Attention`](06-flashattention-io-aware.md)
+
+## 为什么值得单独学
+
+- 看到“慢”时，很多人第一反应是换更快 kernel，但问题可能根本不在算力侧。
+- Roofline 能帮你先判断该优先优化计算还是访存。
+- 它还能把融合、tiling、量化、batching 这些动作翻译成更清晰的物理意义。
+
+## 它到底在回答什么
+
+Roofline 是一种性能分析视角，用来把一个算子的实际表现放到两类上限之间看：
 
 - 算力上限
 - 带宽上限
 
-它不是为了算一个漂亮图，而是为了帮助你判断：
+它不是 profiler 的替代品，而是一个**先定方向**的工具。
 
-- 当前更像算力受限
-- 还是更像内存带宽受限
+## 内存层级，先有这个最小直觉
 
-### 它解决什么问题
+- CPU：L1 / L2 / L3 / NUMA / 主存
+- GPU：寄存器 / shared memory / L2 / HBM（以及可能的 L1/texture cache）
 
-它主要解决：
-
-- 看到“慢”时，不知道该优先优化计算还是访存
-- 不知道融合、tiling、量化、batching 这些动作本质在改变什么
-- 不知道一个优化应该期待提升哪个方向
-
-### 为什么在 AI 系统里重要
-
-因为 LLM 里的热点非常不一样：
-
-- GEMM 往往更像算力问题
-- LayerNorm / Softmax 往往更像带宽问题
-- decode attention 常常是典型 memory-bound
-
-如果没有 roofline 这种语言，很多优化讨论就会退化成：“听说这个技巧很快，我们也试试。”
-
-### 它的收益与代价
-
-收益：
-
-- 能快速缩小问题空间
-- 能把优化动作翻译成更清晰的物理意义
-
-代价：
-
-- 它是粗粒度判断工具，不是替代 profiler 的万能钥匙
-- 只能先告诉你方向，不会自动告诉你具体实现细节
-
-## 内存层级（概念级）
-
-- CPU：L1/L2/L3、NUMA、主存
-- GPU：寄存器、shared memory、L2、HBM（以及可能的 L1/texture cache）
-
-一句很实用的话是：
-
-- 离计算单元越近的存储越快，也越小；离得越远，越大但越慢。
+一句很实用的话：**离计算单元越近的存储越快，也越小；离得越远，越大但越慢。**
 
 很多优化的本质，就是尽量让数据少走慢路，多待在快层里。
 
 ## Roofline 的最小用法
 
-- 算术强度：$AI = \frac{FLOPs}{Bytes}$
-- 经验法：
-  - AI 低：多半带宽瓶颈 → 减少访存、提高复用、融合
-  - AI 高：可能算力瓶颈 → 用更高效 kernel、使用更低精度、提高并行度
+算术强度：
 
-可以把它记成一句话：
+$$
+AI = \frac{FLOPs}{Bytes}
+$$
 
-- AI 低，多半先救 Bytes；AI 高，多半先救 FLOPs 利用率。
+一个够用的经验法：
 
-## 几个在 LLM 里常见的直觉例子
+- $AI$ 低：多半更像带宽瓶颈 → 先减少访存、提高复用、做融合
+- $AI$ 高：更可能接近算力瓶颈 → 先看更高效 kernel、低精度、并行度与 tile 设计
 
-- 大 GEMM：通常 AI 较高，更可能接近算力瓶颈
-- LayerNorm / Softmax：AI 往往更低，更容易受带宽影响
-- Decode attention：虽然数学量不一定夸张，但反复读历史 KV，常常更偏 memory-bound
-- Prefill attention：shape 大时更可能回到 compute-heavy 模式
+把它记成一句话就行：**AI 低，多半先救 Bytes；AI 高，多半先救 FLOPs 利用率。**
 
-这也是为什么同一个 attention，在 prefill 和 decode 的优化策略可能完全不同。
+## 在 LLM 里常见的几个直觉例子
 
-## 最小例子
+| 热点 | 更常见的倾向 |
+|---|---|
+| 大 GEMM | 通常 AI 较高，更可能接近算力瓶颈 |
+| LayerNorm / Softmax | AI 更低，更容易受带宽影响 |
+| Decode attention | 反复读历史 KV，常更偏 memory-bound |
+| Prefill attention | shape 大时更可能回到 compute-heavy 模式 |
 
-假设两个热点：
+这也是为什么同一个 attention，在 prefill 和 decode 的优化策略常常完全不同。
+
+## 最小例子：为什么换 GEMM kernel 不一定救得了 decode
+
+假设有两个热点：
 
 1. 一个大 GEMM
 2. 一个反复读 KV 的 decode attention
@@ -103,83 +85,75 @@ decode attention 常常更像：
 
 这就是为什么“同样都叫 attention / matmul”，优化动作却可能完全不同。
 
-## 推理里常见现象
+## 把优化动作翻译成 Roofline 语言
 
-- Decode 阶段常见：小矩阵/小 batch → launch 与访存占主导
-- Prefill 阶段常见：大 GEMM → 更接近算力瓶颈
+| 优化动作 | 它更像在改善什么 |
+|---|---|
+| 融合 | 减少中间张量写回，降低 Bytes |
+| 更好的 tile / blocking | 提高数据复用，提高有效 AI |
+| FlashAttention | 重排访存路径，减少高层内存往返 |
+| KV cache 量化 | 降低每次读取 Bytes |
+| 动态 batching | 让小 shape 更接近能吃满硬件的区域 |
 
-## 把“优化动作”翻译成 roofline 语言
+这就是 Roofline 真正好用的地方：你不只是知道某个 trick 快，而是知道它快在“减少了什么”或“提高了什么”。
 
-- 融合：减少中间张量写回，降低 Bytes
-- 更好的 tile/blocking：提升数据复用，提高有效 AI
-- FlashAttention：重排访存路径，减少不必要中间结果落到高层内存
-- KV cache 量化：降低每次读取 Bytes
-- 动态 batching：让小 shape 更接近能吃满硬件的区域
+## Troubleshooting：profiler 里 FLOPs 不高，带宽也不高，那到底慢在哪
 
-这是 roofline 真正好用的地方：
+| 现象 | 第一怀疑点 | 如何验证 |
+|---|---|---|
+| FLOPs 不高，带宽也不高 | launch 太碎或同步太多 | 看 kernel 次数、单次时长、trace |
+| decode 慢 | memory-bound + 小 shape | 分离 prefill / decode profile |
+| 大 GEMM 不理想 | tile / kernel / 并行度没吃满 | 看 achieved FLOPs 与 occupancy |
+| 优化后收益不稳 | 只对部分 shape 有效 | 看不同 shape 的回归曲线 |
 
-- 你不只是知道某个 trick 快，而是知道它快在“减少了什么”或者“提升了什么”。
+### 一个排障顺序
 
-## 工程例子
-
-一个常见误判：
-
-- 看到 decode 慢，就直接想换更强 GEMM kernel
-
-但如果问题本质更像：
-
-- KV 读取 Bytes 太多
-- launch 太碎
-- attention 更偏 memory-bound
-
-那你换 GEMM kernel 可能几乎没有体感收益。
-
-相反，如果是 prefill 大矩阵乘慢，图融合和 tile/blocking 优化往往更像正解。
+1. 先粗估这个热点的 $AI$。
+2. 再看 profiler 里的 achieved bandwidth / achieved FLOPs。
+3. 然后判断你提出的优化到底是在减少 Bytes，还是在提高 FLOPs 利用。
+4. 最后再去做具体 kernel、fusion、layout 或 batching 的动作选择。
 
 ## 推理优化工程师视角
 
-对推理优化工程师来说，这篇最关键的价值是：
+这页最关键的价值是：
 
-1. 先用 roofline 把慢因粗分方向
-2. 再决定该看 kernel、layout、fusion、量化还是 batching
-3. 不把所有问题都归结成“算力不够”
+1. 先用 Roofline 把慢因粗分方向。
+2. 再决定该看 kernel、layout、fusion、量化还是 batching。
+3. 不把所有问题都归结成“算力不够”。
 
-会这样做之后，你的优化动作通常会更有命中率。
+如果能做到这一步，你的优化动作通常会更有命中率，也更容易向别人解释清楚“为什么这么改”。
 
-## 常见面试问题
+## 面试高频问法
 
 ### 初级
 
 1. 什么是算术强度？
-2. roofline 为什么能帮助判断是带宽瓶颈还是算力瓶颈？
+2. Roofline 为什么能帮助判断是带宽瓶颈还是算力瓶颈？
 
 ### 中级
 
 1. 为什么 LayerNorm / Softmax 常比大 GEMM 更像 memory-bound？
-2. 为什么 decode attention 常和 prefill attention 的优化方向不同？
+2. 为什么 decode attention 和 prefill attention 的优化方向经常不同？
 
 ### 高级
 
-1. 如果一个优化声称“更快”，你如何用 roofline 语言解释它的收益？
-2. 如果 profiler 显示带宽打不高、FLOPs 也不高，你会怀疑哪些执行问题？
+1. 如果一个优化声称“更快”，你如何用 Roofline 语言解释它的收益？
+2. 如果 profiler 显示带宽打不高、FLOPs 也不高，你会优先怀疑哪些执行问题？
+
+## 易错点
+
+- 把 Roofline 当成万能诊断器，而不是方向判断工具
+- 看到 decode 慢就先换 GEMM kernel
+- 不区分“减少 Bytes”和“提升 FLOPs 利用率”这两类优化
 
 ## 排查 checklist
 
-- [ ] 你能给出这个算子的 AI 粗估吗？
+- [ ] 你能给出这个算子的 $AI$ 粗估吗？
 - [ ] profiler 显示的 achieved bandwidth / achieved FLOPs 大概多少？
-- [ ] 优化后是否同时验证“正确性 + 性能回归曲线（不同 shape）”？
-- [ ] 你提出的优化动作，到底是在减少 Bytes，还是在提高有效 FLOPs 利用？
+- [ ] 优化后是否同时验证了正确性与不同 shape 的性能曲线？
+- [ ] 你的优化动作，到底是在减少 Bytes，还是在提高有效 FLOPs 利用？
 
 ## 参考资料
 
-- roofline / GPU memory hierarchy 相关资料
-- 建议串读：`02-kernel-execution-model.md`、`04-graph-fusion-scheduling.md`
-
-## CS336 对照
-
-- 官方 lecture 对应：Lecture 5（GPUs）、Lecture 6（kernels, Triton）、Lecture 10（inference）
-- 推荐官方入口：https://github.com/stanford-cs336/spring2025-lectures
-- 推荐外部笔记：
-  - https://bearbearyu1223.github.io/posts/cs336-training-a-transformer-lm-part-1/
-  - https://realwujing.github.io/page/3/
-  - https://www.rajdeepmondal.com/blog/cs336-lecture-5
+- Roofline / GPU memory hierarchy 相关资料
+- 建议串读：[`Kernel 与并行基础（SIMD/SIMT）`](02-kernel-execution-model.md)、[`计算图、融合与调度`](04-graph-fusion-scheduling.md)

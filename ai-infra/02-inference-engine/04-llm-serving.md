@@ -1,5 +1,19 @@
 # LLM Serving：batching、paged KV、常见方案
 
+## 核心定义（What & Why）
+
+> **一句话总结**：LLM Serving 是把模型推理包装成稳定线上服务的一整套调度、缓存和资源管理系统，它解决的不是“模型能不能生成”，而是“请求能不能在吞吐、延迟和成本之间稳定落地”。
+
+## 关联知识网络
+
+- 前置：[`推理栈全景`](01-inference-stack-overview.md)
+- 平行：[`Attention 与 KV Cache`](../03-llm-architecture/02-attention-kv-cache.md)
+- 延伸：[`Paged KV 与 Allocator`](07-paged-kv-and-allocator.md)
+- 排障：[`可观测性与调试`](06-observability-and-debugging.md)
+- 方法论：[`推理优化 Playbook`](05-optimization-playbook.md)
+- 多卡视角：[`Collectives`](../04-communication/04-collectives.md)
+- 课程桥接：[`CS336 / 10 推理优化`](../../cs336/10-inference.md)
+
 ## 要点
 
 - 线上推理的关键：**调度**（谁先跑、怎么合批）+ **缓存**（KV cache）+ **隔离**（资源与尾延迟）
@@ -56,6 +70,30 @@ Serving 解决的不是“模型能不能生成”，而是：
 - Dynamic batching：按时间窗合批，吞吐好但可能拉高 TTFT
 - Continuous batching：生成过程中持续合并新请求（常用于 LLM）
 
+## Mermaid：一次请求在 Serving 系统里的生命周期
+
+```mermaid
+flowchart LR
+	A[请求到达] --> B[排队 / 限流]
+	B --> C[长度分桶 / 合批]
+	C --> D[prefill]
+	D --> E[KV cache 建立 / 扩展]
+	E --> F[decode 循环]
+	F --> G[后处理 / 输出]
+
+	E -.依赖.-> H[Paged KV / Allocator]
+	B -.观测.-> I[Metrics / Trace / Profiler]
+	F -.排障.-> I
+```
+
+## 对比表
+
+| 方案 | 优点 | 代价 | 更适合的场景 |
+|---|---|---|---|
+| Static batching | 实现简单，行为稳定 | 动态请求下利用率差 | 离线任务、输入长度相近 |
+| Dynamic batching | 比静态 batch 更能吃满 GPU | 时间窗设置不当会拉高 TTFT | 中等并发、长度波动不大 |
+| Continuous batching | 吞吐高，能更灵活接入新请求 | 调度复杂，状态管理重 | 高频在线生成、长短请求混跑 |
+
 ## KV cache 管理
 
 - 连续分配：简单但容易碎片/扩容拷贝
@@ -100,6 +138,22 @@ Serving 解决的不是“模型能不能生成”，而是：
 - decode 阶段 KV cache 和 allocator 抖动拉高尾延迟
 
 这时如果只看平均 tokens/s，往往会误判“系统没问题”。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：平均吞吐正常，但短请求 TTFT 明显恶化，且 p99 抖动严重。
+
+- **误判**：第一反应以为是 attention kernel 不够快，想先继续压单次算子延迟。
+- **根因**：真正的问题出在调度窗口过大、长 prompt 挤占 prefill 资源，以及 KV cache / allocator 抖动把尾延迟放大了。
+- **解决动作**：
+	- 先拆开看 `排队 -> prefill -> decode -> 后处理` 的时延；
+	- 按输入长度分桶看 TTFT / TPOT；
+	- 再检查 KV cache 扩容、显存碎片和 block 分配稳定性。
+- **复盘**：Serving 很多时候不是“算得慢”，而是“排得乱、抢得狠、抖得大”。
+
+> 常见报错：CUDA out of memory while expanding KV cache blocks
+
+- 如果报错只在高并发或长上下文下出现，优先怀疑 **KV cache 增长曲线** 和 **allocator 策略**，不要只盯模型权重大小。
 
 ## 推理优化工程师视角
 

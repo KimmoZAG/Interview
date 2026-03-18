@@ -1,105 +1,68 @@
 # 计算图、融合与调度
 
-## 要点
+## 一句话先讲清
 
-- 推理加速常见路径：**图级优化（融合/常量折叠）+ kernel 级优化（高效实现）**
-- 融合的收益主要来自：减少中间张量写回、减少 kernel launch、提高缓存复用
-- 从 CS336 的角度看，FlashAttention 是理解“融合为什么重要”的最好例子之一，因为它不是单纯把多个 op 拼一起，而是重新设计 IO 路径
-- 真正该问的不是“有没有融合”，而是：**融合之后，中间张量、kernel 数量和访存路径到底有没有真正改善**。
+真正该问的不是“有没有融合”，而是：**融合之后，中间张量、kernel 数量和访存路径到底有没有真的改善。**
 
-## 通用知识
+从系统视角看，融合和调度的核心目标很朴素：**少写回、少 launch、多复用。**
 
-### 它是什么
+## 关联知识网络
 
-计算图可以理解为：
+- 输入与 shape：[`张量、shape 与内存布局`](01-tensors-shapes-layout.md)
+- 执行模型：[`Kernel 与并行基础（SIMD/SIMT）`](02-kernel-execution-model.md)
+- Roofline：[`内存层级与性能模型（Roofline）`](03-memory-hierarchy-and-roofline.md)
+- 典型例子：[`FlashAttention 与 IO-aware Attention`](06-flashattention-io-aware.md)
+- 编译视角：[`图编译：TVM / MLIR / XLA`](../02-inference-engine/03-graph-compiler-tvm-mlir-xla.md)
+
+## 为什么值得单独学
+
+- 很多推理性能问题根本不是单个 kernel 不够快，而是图被拆得太碎。
+- 图融合的收益通常来自减少中间张量写回、减少 launch 次数、提高缓存和 shared memory 复用。
+- FlashAttention 之所以经典，就是因为它不是简单把 op 粘一起，而是重新设计了 IO 路径和局部调度。
+
+## 计算图和调度，分别在关心什么
+
+### 计算图
 
 - 节点是算子
 - 边是张量
+- 关键属性是 shape / dtype / layout / 是否动态 shape
 
-融合和调度则是在问：
+### 调度（scheduling）
 
-- 这些算子能否合并得更紧凑
-- 数据能否少写回、少读回
-- 工作能否在更合适的 tile / block / memory reuse 方式下执行
+- tile / blocking 如何设计
+- 线程块如何映射
+- buffer 如何复用
+- 哪些中间结果不该频繁落回高层内存
 
-### 它解决什么问题
-
-它主要解决：
-
-- 图上有很多小 op，导致 kernel 太碎
-- 中间张量写回太多，内存流量过大
-- 同一段子图明明逻辑简单，却被拆得支离破碎
-
-### 为什么在 AI 系统里重要
-
-因为很多推理性能问题根本不是“单个 kernel 不够快”，而是：
-
-- 图被拆得太散
-- 中间结果落地太多
-- launch 次数太多
-- tile / blocking / buffer reuse 没设计好
-
-### 它的收益与代价
-
-收益：
-
-- 减少中间张量访存
-- 减少 launch 次数
-- 提高 cache / shared memory 复用
-
-代价：
-
-- 数值误差可能变化
-- 动态 shape 会让融合和缓存策略更复杂
-- 调试难度通常会上升
-
-## 计算图（抽象）
-
-- Op graph：节点是算子，边是张量
-- 关键属性：shape/dtype/layout、是否动态 shape、是否可重排
-
-从工程上看，一个图如果想融合得好，通常要先满足两件事：
+从工程上看，一个子图如果想融合得好，通常至少要满足：
 
 - 子图边界相对稳定
 - shape / dtype / layout 没有太多阻碍重排的因素
 
-## 融合的常见形态
+## 图级融合 vs kernel 级融合，别混了
 
-- pointwise 链：`bias + gelu + dropout`（推理里 dropout 通常关）
-- Norm + scale/bias
-- attention 子图（QKV 投影、softmax、matmul）中的部分融合
+| 概念 | 它在做什么 |
+|---|---|
+| 图级融合 | 从 op graph 角度把多个节点合并，减少图上的小 op |
+| kernel 级融合 | 最终执行时让更多工作在一次 launch 中完成 |
 
-## 图级融合 vs kernel 级融合
+两者通常相关，但不是一回事。你可能会遇到：
 
-这是很容易混淆的一组概念：
+- 图上看已经融合了，但底层还是多个 kernel
+- 高层看似是一个 op，底层却仍然拆得很碎
 
-- 图级融合：从 op graph 角度把多个节点合并，减少图上的小 op
-- kernel 级融合：最终执行时让更多工作在一次 launch 中完成
+所以真正的验证不能只看 graph IR，还要看 profiler 里的 kernel 数和中间张量访存。
 
-两者通常相关，但不是一回事。你可能：
+## 最常见、最值得融合的场景
 
-- 在图上做了融合，但底层仍然落成多个 kernel
-- 或者看似是一个高层 op，但底层其实拆成很多 kernel
+- pointwise 链：`bias + gelu (+ dropout)`
+- norm + scale / bias
+- attention 子图中的部分融合
 
-因此，真正的验证不能只看 graph IR，还要看 profiler 里的 kernel 数和中间张量访存。
+一句经验法：**pointwise 链越长、kernel 越碎，就越值得优先考虑融合。**
 
-## 调度（scheduling）关注点
-
-- tile/blocking（提高数据复用）
-- 并行策略（线程块映射）
-- 内存分配与重用（buffer reuse）
-
-调度真正关心的是：
-
-- 哪些数据应该尽量留在快存储里
-- 哪些工作应该被一起做完
-- 哪些中间结果不该频繁落回高层内存
-
-## 最小例子
-
-考虑一段简单子图：
-
-- `matmul -> bias add -> gelu`
+## 最小例子：`matmul -> bias add -> gelu`
 
 如果不做融合：
 
@@ -110,52 +73,49 @@
 
 如果做了更好的融合和调度：
 
-- bias add / gelu 可以尽量贴着主计算执行
+- bias add / gelu 尽量贴着主计算执行
 - 中间张量写回减少
 - launch 次数减少
 
-这就是融合最朴素也最实用的收益来源。
+这就是融合最朴素、也最实用的收益来源。
 
 ## FlashAttention 为什么是理解调度的经典例子
 
-它最值得学的不是具体实现细节，而是这几个原则：
+它最值得学的不是具体实现细节，而是三个原则：
 
 - 不要急着把中间 attention matrix 全部写回高层内存
 - 尽量在 tile 内完成更多局部计算与归约
-- 让 softmax 的数值稳定计算与访存路径一起设计
+- 让 softmax 的数值稳定计算和访存路径一起设计
 
-换句话说，FlashAttention 的“快”不是来自一个数学近似，而是来自 **IO-aware scheduling**。
+换句话说，FlashAttention 的“快”，本质上是 **IO-aware scheduling**。
 
-## 工程例子
+## Troubleshooting：为什么 IR 上看起来融合了，性能却没起色
 
-一个典型现象：
+| 现象 | 第一怀疑点 | 如何验证 |
+|---|---|---|
+| graph / IR 看起来更紧凑 | 底层并没真正合成更少 kernel | 看 profiler 中 kernel 数量 |
+| kernel 数少了但收益有限 | Bytes 没明显下降 | 看中间张量写回和带宽 |
+| 某些 shape 好，某些 shape 差 | 动态 shape 让融合难稳定落地 | 看不同 shape 的路径与 cache |
+| 性能变好了但输出飘了 | 融合改变了数值路径 | 对比误差与回归样例 |
 
-- 图上看已经“融合”了
-- 但 profiler 里 kernel 数量并没有明显减少
+### 一个排障顺序
 
-这通常意味着：
-
-- 图级表示层面看起来更紧凑了
-- 但底层执行并没有真正合成更少的 kernel
-- 或者动态 shape / layout 约束让部分融合无法稳定落地
-
-这也是为什么工程里一定要同时看：
-
-- graph/IR
-- kernel 数
-- 中间张量访存
-
-只看其中一个，很容易误判。
+1. 先看图上是否存在大量小 op 导致 launch 爆炸。
+2. 再看融合前后 kernel 数量是否真的下降。
+3. 然后看中间张量写回和 Bytes 是否一起下降。
+4. 最后同时验证误差变化，别只盯性能数字。
 
 ## 推理优化工程师视角
 
-对推理优化工程师来说，这篇最核心的价值是：
+这页最核心的价值是：
 
-1. 不把融合当成“编译器 magic”
-2. 要把融合收益翻译成：更少 kernel、更少 Bytes、更少写回
-3. 任何“融合已生效”的结论，都最好由 profiler 和误差对比一起支持
+1. 不把融合当成“编译器 magic”。
+2. 要把融合收益翻译成：更少 kernel、更少 Bytes、更少写回。
+3. 任何“融合已生效”的结论，最好都由 profiler 和误差对比一起支持。
 
-## 常见面试问题
+如果只能在图层面说“已经融合”，却没法在 kernel 层和访存层证明收益，那这个结论通常还不够硬。
+
+## 面试高频问法
 
 ### 初级
 
@@ -174,28 +134,19 @@
 
 ## 易错点
 
-- 融合后数值误差变化（尤其低精度）
+- 融合后数值误差变化，尤其在低精度下
 - 动态 shape 导致某些优化失效或需要多个编译 cache
 - 只在图层面宣称“已经融合”，却没有在 kernel 层验证 launch 是否真的减少
-- 只盯 kernel 数，不看 Bytes 和数值行为是否也一起改善
+- 只盯 kernel 数，不看 Bytes 和数值行为是否一起改善
 
 ## 排查 checklist
 
-- [ ] 图中是否存在大量小 op（pointwise）导致 launch 爆炸？
+- [ ] 图中是否存在大量小 op（尤其 pointwise）导致 launch 爆炸？
 - [ ] 是否能接受对部分子图做 ahead-of-time 编译缓存？
-- [ ] 融合前后是否对比了中间张量的最大误差？
+- [ ] 融合前后是否对比了中间张量误差？
 - [ ] profiler 里 kernel 数量、时间分布、Bytes 真的下降了吗？
 
 ## 参考资料
 
 - 图编译 / kernel fusion / scheduling 相关资料
-- 建议串读：`03-memory-hierarchy-and-roofline.md`、`06-flashattention-io-aware.md`
-
-## CS336 对照
-
-- 官方 lecture 对应：Lecture 6（kernels, Triton）、Lecture 10（inference）
-- 推荐官方入口：https://github.com/stanford-cs336/spring2025-lectures
-- 推荐外部笔记：
-  - https://github.com/anenbergb/LLM-from-scratch
-  - https://github.com/Melody-Zhou/stanford-cs336-spring2025-assignments
-  - https://www.rajdeepmondal.com/blog/cs336-lecture-6
+- 建议串读：[`内存层级与性能模型（Roofline）`](03-memory-hierarchy-and-roofline.md)、[`FlashAttention 与 IO-aware Attention`](06-flashattention-io-aware.md)

@@ -1,4 +1,4 @@
-# AI Infra 学习笔记（重构中）
+# AI Infra 学习笔记
 
 目标：围绕 **推理优化方向**，用“工程师视角 + 面试视角”把 AI Infra 的核心知识串成一条清晰主线。
 
@@ -14,8 +14,10 @@
 
 ## 当前状态说明
 
-- 新结构已经启用，后续内容维护统一在五大板块目录下进行
-- 旧结构已完成迁移，不再作为主入口使用
+- 五大板块结构已经稳定启用，`00-index` 与子模块索引可作为主入口使用
+- 推理引擎、LLM 架构、通信、算子优化四条主线已经补齐一批“实战型重构”的核心页
+- 附录继续承担术语、映射、模板与补充知识的角色，而不再充当主线入口
+- 后续新增内容默认遵循统一模板与跨章节桥接规范
 
 ## 建议阅读顺序
 
@@ -26,6 +28,14 @@
 3. `02-inference-engine/`
 4. `04-communication/`
 5. `05-appendix/`
+
+如果你是从 `CS336` 过来的，推荐按下面的桥接顺序往 `AI Infra` 深挖：
+
+- `CS336 / 02 资源核算` → `训练资源核算`
+- `CS336 / 05 GPU` → `内存层级与 Roofline`
+- `CS336 / 06 Kernel/Triton` → `计算图、融合与调度`
+- `CS336 / 07-08 并行` → `训练并行策略 / Collectives / 拓扑`
+- `CS336 / 10 推理优化` → `LLM Serving / Paged KV / 可观测性`
 
 ## 写作约定
 
@@ -40,6 +50,8 @@
 7. **参考资料**
 
 模板见：[`05-appendix/chapter-template.md`](05-appendix/chapter-template.md)
+
+更通用的写作与带学员改写范式见：[`../reference/note-writing-playbook.md`](../reference/note-writing-playbook.md)
 
 ## 入口
 

@@ -4,6 +4,20 @@
 
 课程导航：上一讲 [04 Mixture of Experts](04-mixture-of-experts.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [06 Kernel 与 Triton](06-kernels-and-triton.md)
 
+工程桥接：[`AI Infra / 内存层级与 Roofline`](../ai-infra/01-operator-optimization/03-memory-hierarchy-and-roofline.md)｜[`AI Infra / FlashAttention 与 IO-aware`](../ai-infra/01-operator-optimization/06-flashattention-io-aware.md)｜[`AI Infra / 计算图融合与调度`](../ai-infra/01-operator-optimization/04-graph-fusion-scheduling.md)
+
+## 核心定义（What & Why）
+
+> **一句话总结**：GPU 性能优化的核心不是“让计算更复杂”，而是“让数据搬运更少、复用更高”，它解决的是为什么同样的 FLOPs，在真实硬件上会跑出完全不同的速度。
+
+## 关联知识网络
+
+- 前置：[`02 PyTorch 与资源核算`](02-pytorch-and-resource-accounting.md)
+- 延伸：[`06 Kernel 与 Triton`](06-kernels-and-triton.md)
+- 延伸：[`10 推理优化`](10-inference.md)
+- 平行：[`AI Infra / 内存层级与 Roofline`](../ai-infra/01-operator-optimization/03-memory-hierarchy-and-roofline.md)
+- 平行：[`AI Infra / FlashAttention 与 IO-aware`](../ai-infra/01-operator-optimization/06-flashattention-io-aware.md)
+
 ## 先抓住这讲要点
 
 - GPU 优化的第一原则不是“多算”，而是**少搬数据**。
@@ -70,6 +84,24 @@ $$
 
 > 不是所有优化都该去“减少 FLOPs”，很多优化其实该去“减少 bytes moved”。
 
+### 一个能在面试里现场算出来的小例子
+
+如果一个 kernel 总共做了 `2 × 10^12 FLOPs`，同时搬运了 `5 × 10^11 Bytes`，那么它的 arithmetic intensity 就是：
+
+$$
+\frac{2 \times 10^{12}}{5 \times 10^{11}} = 4 \text{ FLOPs / Byte}
+$$
+
+这个数字本身没有绝对意义，关键是把它和硬件的 compute / bandwidth 比值对照着看。
+
+工程上你真正该问的是：
+
+- 这个 intensity 是否低到明显更像 bandwidth-bound；
+- 如果是，那继续抠 FLOPs 意义就不大；
+- 更应该做的是 fusion、tiling、layout 优化，减少 bytes moved。
+
+也就是说，roofline 不是一张“知识点图片”，而是一张**决定下一步该改哪里**的路标。
+
 ### 4. 为什么 warp divergence 很伤
 
 warp 内线程通常 lockstep 执行。  
@@ -106,6 +138,25 @@ tiling 的思路是：
 这也是为什么很多高性能 kernel 看起来都在做一件事：
 
 > 把大问题切成能放进片上缓存/共享内存的小块，再局部高复用地算完。
+
+#### 从“听懂概念”到“把收益算出来”
+
+如果某段数据原来每算一次输出就要从 HBM 读一次，那么复用率很低；
+而 tiling 的目标是让同一块数据被多个输出重复使用。
+
+你可以把它粗暴理解成：
+
+- **没做 tiling**：一份数据搬进来，算一下就丢；
+- **做了 tiling**：一份数据搬进来，在 shared memory 里多算几次再丢。
+
+于是收益本质上就是：
+
+> **同样的 bytes，喂出了更多 FLOPs。**
+
+这也是为什么很多 GPU 优化最后都能翻译成一句很朴素的话：
+
+- 不是你算得更“高级”了；
+- 而是你终于不再反复从最贵的内存层级拿同一份数据了。
 
 ### 6. 为什么 fusion 常常很值
 
@@ -153,6 +204,15 @@ fusion 则把多步算子合并成一个 kernel，让中间值尽量停留在寄
 
 > 多算一点，少搬一点，可能反而更快。
 
+## 对比表：常见 GPU 优化动作到底在优化什么
+
+| 手段 | 直接作用 | 本质收益 | 常见代价 |
+|---|---|---|---|
+| Tiling | 把数据块搬到片上反复复用 | 提高 arithmetic intensity，减少 HBM 往返 | tile 设计复杂，受 shared memory 限制 |
+| Fusion | 合并多个小算子 | 少 launch、少写回、少重读 | kernel 更复杂，调试难 |
+| Mixed precision | 降低每个元素字节数 | 降带宽压力，提升 tensor core 利用率 | 数值稳定性要额外处理 |
+| Recompute | 不存中间结果，按需再算 | 省显存，少读写大激活 | 额外计算增加 |
+
 ## FlashAttention 为什么快
 
 不是因为它“改了注意力公式”，而是因为它：
@@ -165,6 +225,16 @@ fusion 则把多步算子合并成一个 kernel，让中间值尽量停留在寄
 它之所以经典，是因为它非常系统性地展示了一个原则：
 
 > 在现代加速器上，重新设计 IO 路径，常常比重新设计数学公式更重要。
+
+### 一个更工程化的回答模板
+
+如果面试官追问你“为什么 FlashAttention 会快”，比起只说“它减少了显存”，更强的答法是分三层：
+
+1. **它没有把整块 attention matrix 落到 HBM；**
+2. **它用 tile + online softmax 把计算留在片上；**
+3. **它把瓶颈从大量全局读写，转成了更高复用的片上计算。**
+
+也就是说，它不是“公式突然变简单”，而是把最贵的数据搬运路径切短了。
 
 ## 代码拆解：在线 softmax 思想
 
@@ -205,6 +275,22 @@ online softmax 则告诉你：不需要。
 - 能不能 checkpoint / recompute？
 - warp 有没有明显 divergence？
 - tile size 是否和硬件粒度对齐？
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：理论 FLOPs 很高，profiling 里 kernel 也不少，但 GPU utilization 还是上不去。
+
+- **误判**：以为是“算子不够复杂”或 FLOPs 还不够高，继续在数学公式上抠细节。
+- **根因**：更常见的是 memory-bound——HBM 搬运太重、小 kernel 太碎、layout 不友好，导致计算单元长期在等数据。
+- **解决动作**：
+    - 先用 roofline 思维判断是带宽瓶颈还是算力瓶颈；
+    - 再看能不能做 tiling、fusion、改 layout、降 precision；
+    - 最后才考虑是否真的需要改算法。
+- **复盘**：GPU 很多时候不是“不会算”，而是“吃不到料”。
+
+> 常见异常：FlashAttention 上了以后显存下来了，但整体收益没有想象中大。
+
+- 这往往说明瓶颈已经不只在 attention IO，上游调度、下游 KV cache、或其他 kernel 的数据路径也在一起分摊总延迟。
 
 ## 面试里怎么讲这一讲
 

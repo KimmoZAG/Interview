@@ -73,6 +73,14 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 | [量化基础](01-operator-optimization/05-quantization-basics.md) | INT8/INT4、calibration、量化误差 |
 | [FlashAttention 与 IO-aware](01-operator-optimization/06-flashattention-io-aware.md) | tiling、重计算、IO 感知的 Attention 实现 |
 
+> 已完成本轮“实战型重构”的算子侧核心页：
+> [`张量与内存布局`](01-operator-optimization/01-tensors-shapes-layout.md) ·
+> [`Kernel 执行模型`](01-operator-optimization/02-kernel-execution-model.md) ·
+> [`内存层级与 Roofline`](01-operator-optimization/03-memory-hierarchy-and-roofline.md) ·
+> [`图融合与调度`](01-operator-optimization/04-graph-fusion-scheduling.md) ·
+> [`量化基础`](01-operator-optimization/05-quantization-basics.md) ·
+> [`FlashAttention`](01-operator-optimization/06-flashattention-io-aware.md)
+
 ### 推理引擎
 
 | 篇目 | 核心问题 |
@@ -86,6 +94,16 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 | [Paged KV 与 Allocator](02-inference-engine/07-paged-kv-and-allocator.md) | PagedAttention、块管理、显存稳定性 |
 | [长上下文推理](02-inference-engine/08-long-context-serving.md) | chunked prefill、context 切分、扩展策略 |
 
+> 已完成本轮“实战型重构”的推理主线核心页：
+> [`推理栈全景`](02-inference-engine/01-inference-stack-overview.md) ·
+> [`Runtime`](02-inference-engine/02-runtime-onnxruntime-tensorrt.md) ·
+> [`图编译`](02-inference-engine/03-graph-compiler-tvm-mlir-xla.md) ·
+> [`LLM Serving`](02-inference-engine/04-llm-serving.md) ·
+> [`推理优化 Playbook`](02-inference-engine/05-optimization-playbook.md) ·
+> [`可观测性与调试`](02-inference-engine/06-observability-and-debugging.md) ·
+> [`Paged KV 与 Allocator`](02-inference-engine/07-paged-kv-and-allocator.md) ·
+> [`长上下文推理`](02-inference-engine/08-long-context-serving.md)
+
 ### LLM 架构
 
 | 篇目 | 核心问题 |
@@ -98,6 +116,15 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 | [MoE 最小导读](03-llm-architecture/06-moe-minimum.md) | 稀疏激活、路由、系统代价 |
 | [训练资源核算](03-llm-architecture/07-training-resource-accounting.md) | FLOPs、显存、tokens 的账怎么算 |
 
+> 已完成本轮“实战型重构”的模型侧核心页：
+> [`Transformer 最小知识`](03-llm-architecture/01-transformer-minimum.md) ·
+> [`Attention 与 KV Cache`](03-llm-architecture/02-attention-kv-cache.md) ·
+> [`Norm/激活/稳定性`](03-llm-architecture/03-norm-activation-stability.md) ·
+> [`Tokenizer 与采样`](03-llm-architecture/04-tokenization-and-sampling.md) ·
+> [`评测与基准`](03-llm-architecture/05-evaluation-and-benchmarking.md) ·
+> [`MoE 最小导读`](03-llm-architecture/06-moe-minimum.md) ·
+> [`训练资源核算`](03-llm-architecture/07-training-resource-accounting.md)
+
 ### 分布式通信
 
 | 篇目 | 核心问题 |
@@ -107,6 +134,13 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 | [互联与拓扑](04-communication/03-interconnects-and-topology.md) | PCIe / NVLink / NVSwitch / InfiniBand / RDMA |
 | [集合通信原语](04-communication/04-collectives.md) | all-reduce / all-gather / reduce-scatter / all-to-all |
 | [并行到通信映射](04-communication/05-parallelism-to-communication.md) | 每种并行策略引入的通信体积与频次 |
+
+> 已完成本轮“实战型重构”的通信核心页：
+> [`通信基础`](04-communication/02-communication-foundations.md) ·
+> [`互联与拓扑`](04-communication/03-interconnects-and-topology.md) ·
+> [`训练并行策略`](04-communication/01-training-parallelism.md) ·
+> [`Collectives`](04-communication/04-collectives.md) ·
+> [`并行到通信映射`](04-communication/05-parallelism-to-communication.md)
 
 ---
 

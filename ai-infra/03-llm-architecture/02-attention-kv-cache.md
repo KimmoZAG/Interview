@@ -1,5 +1,17 @@
 # Attention、KV cache 与吞吐/延迟
 
+## 核心定义（What & Why）
+
+> **一句话总结**：Attention 与 KV cache 共同决定了 LLM 推理阶段“算什么、存什么、读什么”，它们解决的是自回归生成中的重复计算问题，同时也把显存、带宽和尾延迟问题一并带了进来。
+
+## 关联知识网络
+
+- 前置：[`Transformer 最小知识`](01-transformer-minimum.md)
+- 平行：[`FlashAttention 与 IO-aware`](../01-operator-optimization/06-flashattention-io-aware.md)
+- 延伸：[`LLM Serving`](../02-inference-engine/04-llm-serving.md)
+- 工程落地：[`Paged KV 与 Allocator`](../02-inference-engine/07-paged-kv-and-allocator.md)
+- 多卡关联：[`并行训练策略`](../04-communication/01-training-parallelism.md)
+
 ## 要点
 
 - Attention 在 decode 阶段常见瓶颈：读取历史 KV（带宽）+ 小 shape 计算（launch/调度）
@@ -92,6 +104,13 @@ $$
 - 连续布局：实现简单，顺序访问友好，但扩容和碎片问题更明显
 - 分页/分块布局：更容易做动态请求管理、减少大块拷贝，但索引和调度更复杂
 
+## 对比表
+
+| KV 布局 | 优点 | 代价 | 更适合的场景 |
+|---|---|---|---|
+| 连续布局 | 访问简单、实现直接 | 扩容和大块拷贝成本高，碎片更明显 | 固定 batch、长度分布较稳定 |
+| 分页 / 分块布局 | 更适合动态请求与复用，减少大块搬运 | 索引、调度和 allocator 复杂度更高 | 在线 serving、长短请求混跑 |
+
 ## 吞吐/延迟的常见矛盾
 
 - 吞吐：更依赖 batching（合并请求）
@@ -109,6 +128,19 @@ $$
 - 并发数增大导致 KV cache 成倍增长
 - decode 每步都要更频繁地读大块历史 KV
 - allocator / layout 不稳时，尾延迟会进一步被放大
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> RuntimeError: CUDA out of memory while allocating KV cache
+
+- **现象**：模型权重可以正常加载，但并发一高就出现 OOM，且 TPOT 明显变差。
+- **误判**：最开始以为是 batch 太大或者权重量超了，想先压缩权重精度。
+- **根因**：真正失控的是 KV cache，而不是模型参数本身；并发数和上下文长度一起上来后，KV 访存与显存占用快速膨胀。
+- **解决动作**：
+  - 先估算 KV cache 的理论显存占用；
+  - 再分开看 prefill 与 decode 的资源模式；
+  - 最后检查是连续扩容导致拷贝抖动，还是 allocator 碎片放大了问题。
+- **复盘**：看到“高并发 + 长上下文 + OOM / TPOT 上升”这个组合，第一反应就该想到 KV cache，而不是只盯权重。
 
 ## 推理优化工程师视角
 

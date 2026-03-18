@@ -4,6 +4,21 @@
 
 课程导航：上一讲 [07 并行训练 1](07-parallelism.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [09 Scaling law 基础](09-scaling-laws-fundamentals.md)
 
+工程桥接：[`AI Infra / Collectives`](../ai-infra/04-communication/04-collectives.md)｜[`AI Infra / 互联与拓扑`](../ai-infra/04-communication/03-interconnects-and-topology.md)｜[`AI Infra / 并行到通信映射`](../ai-infra/04-communication/05-parallelism-to-communication.md)
+
+## 核心定义（What & Why）
+
+> **一句话总结**：这一讲讲的是高层并行策略落地后的“底层交通规则”——collective 与通信实现细节，它解决的是为什么同样的并行方案，在不同拓扑和实现下性能会差得非常离谱。
+
+## 关联知识网络
+
+- 前置：[`07 并行训练（一）`](07-parallelism.md)
+- 延伸：[`09 Scaling law 基础`](09-scaling-laws-fundamentals.md)
+- 平行：[`AI Infra / Collectives`](../ai-infra/04-communication/04-collectives.md)
+- 平行：[`AI Infra / 互联与拓扑`](../ai-infra/04-communication/03-interconnects-and-topology.md)
+- 系统映射：[`AI Infra / 并行到通信映射`](../ai-infra/04-communication/05-parallelism-to-communication.md)
+- 排障：[`AI Infra / 可观测性与调试`](../ai-infra/02-inference-engine/06-observability-and-debugging.md)
+
 ## 先抓住这讲要点
 
 - 分布式训练里很多“高层并行策略”，最后都会落到少数几种 collective 上：`all-reduce`、`reduce-scatter`、`all-gather`、`broadcast`。
@@ -106,6 +121,15 @@
 - 初始化参数；
 - 发布配置；
 - 某些恢复流程中的状态同步。
+
+## 对比表：常见 collective 的语义与系统代价
+
+| Collective | 语义 | 常见场景 | 更敏感的成本 |
+|---|---|---|---|
+| all-reduce | 归约后所有 rank 都拿完整结果 | DDP 梯度同步 | 总字节量、同步点、尾部 bucket |
+| reduce-scatter | 归约后每个 rank 只拿一片 | ZeRO/FSDP 梯度分片 | 分片均衡、小消息延迟 |
+| all-gather | 所有分片拼回完整结果 | FSDP 参数聚合、TP 激活拼接 | 带宽压力、峰值内存 |
+| broadcast | 一份数据发给所有 rank | 初始化、配置同步 | 单源瓶颈、同步时机 |
 
 ## all-reduce 为什么是 DDP 的心脏
 
@@ -278,6 +302,22 @@ def benchmark_collective(fn, tensor, warmup=10, iters=50):
 - 是否某个 collective 在 profile 中形成长尾。
 
 因为优化方向往往来自“模式”，不是来自单个孤立数字。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：collective benchmark 看着很正常，但真实训练里某一轮经常卡住甚至 hang。
+
+- **误判**：先怪网络设备、框架 bug，或者觉得“这波只是偶发抖动”。
+- **根因**：更常见的是参与 collective 的 rank 没走到一致状态，或者某些 rank 的张量 shape / 顺序不一致，导致大家互相等到天荒地老。
+- **解决动作**：
+    - 先确认所有 rank 的调用顺序一致；
+    - 再检查 shape、dtype、world size 配置是否完全一致；
+    - 必要时在关键阶段加 barrier 和日志，把“谁先掉队”抓出来。
+- **复盘**：分布式 hang 很少是玄学，通常只是“有人没按交通规则开车”。
+
+> 常见异常：扩卡后 benchmark 不差，但真实训练吞吐却不线性。
+
+- 这往往说明问题不在单次 collective，而在它和计算的 overlap、消息粒度、拓扑层级或尾部长消息行为。
 
 ## 面试里可以怎么讲
 

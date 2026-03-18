@@ -4,6 +4,21 @@
 
 课程导航：上一讲 [09 Scaling law 基础](09-scaling-laws-fundamentals.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [11 Scaling law 案例](11-scaling-laws-case-studies.md)
 
+工程桥接：[`AI Infra / LLM Serving`](../ai-infra/02-inference-engine/04-llm-serving.md)｜[`AI Infra / 推理优化 Playbook`](../ai-infra/02-inference-engine/05-optimization-playbook.md)｜[`AI Infra / Attention 与 KV Cache`](../ai-infra/03-llm-architecture/02-attention-kv-cache.md)
+
+## 核心定义（What & Why）
+
+> **一句话总结**：推理优化研究的是“训练好的模型如何在真实服务里更快、更稳、更省地生成结果”，它解决的是 TTFT、吞吐、并发、长上下文和成本这些上线后立刻会冒头的问题。
+
+## 关联知识网络
+
+- 前置：[`05 GPUs`](05-gpus.md)
+- 前置：[`09 Scaling law 基础`](09-scaling-laws-fundamentals.md)
+- 平行：[`07 并行训练（一）`](07-parallelism.md)
+- 延伸：[`AI Infra / LLM Serving`](../ai-infra/02-inference-engine/04-llm-serving.md)
+- 延伸：[`AI Infra / Attention 与 KV Cache`](../ai-infra/03-llm-architecture/02-attention-kv-cache.md)
+- 排障：[`AI Infra / 可观测性与调试`](../ai-infra/02-inference-engine/06-observability-and-debugging.md)
+
 ## 先抓住这讲要点
 
 - 推理优化关心的不是训练 loss，而是服务指标：**TTFT、latency、throughput、并发能力、成本**。
@@ -34,6 +49,23 @@
 - 理解为什么 KV cache 是推理系统设计中心；
 - 知道现代推理优化都在减少什么瓶颈；
 - 能把模型结构改动（GQA/MLA/CLA）和系统收益连起来看。
+
+## 为什么这页最适合用“少存、少搬、少等”来读
+
+很多人会把推理优化读成一串技巧清单：
+
+- KV cache
+- paged attention
+- speculative decoding
+- batching
+
+但真正更容易记住、也更适合面试的方式，是把所有方法压缩成三件事：
+
+1. **少存**：降低 KV footprint；
+2. **少搬**：减少 decode 阶段的访存压力；
+3. **少等**：减少排队、串行推进和调度空转。
+
+只要这三条线抓住了，很多看起来很散的推理技巧，就会自动归位。
 
 ## 代表图
 
@@ -67,6 +99,16 @@
 所以推理优化不是“让一个请求更快”这么简单，而是：
 
 > 在真实负载下，把交互体验、机器利用率和单位成本同时尽量做好。
+
+## 对比表：prefill vs decode
+
+| 维度 | Prefill | Decode |
+|---|---|---|
+| 处理对象 | 整段 prompt | 每步新增 1 个 token |
+| 常见形态 | 大矩阵并行计算 | 高频、小 batch 增量计算 |
+| 更常见瓶颈 | compute-bound | memory-bound |
+| 优化重点 | kernel、矩阵效率、吞吐 | KV cache、访存、调度、尾延迟 |
+| 更敏感指标 | TTFT | TPOT / p95 / p99 |
 
 ## Prefill 和 decode 为什么是两个世界
 
@@ -141,6 +183,44 @@ GPU 喜欢的是：
 所以现代推理系统的大量优化，本质都在回答一个问题：
 
 > 我怎样保留 KV cache 的收益，同时尽量压低它带来的存储和带宽成本？
+
+### 一个最值得会算的小例子：KV cache 为什么会把显存吃得这么快
+
+对 decoder-only 模型，可以用一个很粗但很实用的量级公式去记单请求 KV cache：
+
+$$
+	ext{KV Bytes} \approx 2 \times L \times T \times H_{kv} \times d_{head} \times \text{bytes}
+$$
+
+其中：
+
+- `2` 表示 `K` 和 `V`
+- $L$ 是层数
+- $T$ 是上下文长度
+- $H_{kv}$ 是 KV heads 数
+- $d_{head}$ 是每个 head 的维度
+
+假设：
+
+- `L = 32`
+- `T = 8k`
+- `H_kv = 8`
+- `d_head = 128`
+- `bytes = 2`（BF16）
+
+那么单请求 KV cache 大约是：
+
+$$
+2 \times 32 \times 8192 \times 8 \times 128 \times 2 \approx 1.07 \text{ GB}
+$$
+
+这还只是**一个请求**的量级。
+
+于是你马上就能理解：
+
+- 为什么长上下文并发很容易把显存吃爆；
+- 为什么 GQA / MLA / paged KV 会这么重要；
+- 为什么很多推理优化其实不是在改权重，而是在改“每个 token 留下多大历史包袱”。
 
 ## 代码拆解：KV cache 更新示意
 
@@ -218,6 +298,18 @@ def speculative_step(draft_model, target_model, prompt):
 最关键的一点是：设计得当时，最终采样分布仍可与目标模型直接采样保持一致。  
 这也是它比“粗暴近似”更有吸引力的地方。
 
+### 一个更像系统工程的解释
+
+speculative decoding 最容易被误解成“多加一个小模型帮忙猜”。
+
+更准确的理解是：
+
+> 它在试图减少目标模型那条最贵的、逐 token 串行推进路径。
+
+如果小模型一次能成功帮你多推进几步，那么大模型就不必每个 token 都走完整个串行闭环。
+
+所以它省下来的，往往不是总 FLOPs 本身，而是**大模型串行步数**。
+
 ## 推理优化常见方向，其实都在做三件事
 
 把各种推理系统论文和工程方案放在一起看，会发现大多都在做这三类事：
@@ -244,6 +336,55 @@ def speculative_step(draft_model, target_model, prompt):
 - prefill/decode 分离优化。
 
 所以推理优化不是单点绝招，而是一套围绕**存储、带宽、调度**展开的系统工程。
+
+## 一个工程选型模板：先看 TTFT、再看 TPOT、最后看并发曲线
+
+如果你接手一个“线上感觉慢”的推理系统，一个很稳的顺序通常是：
+
+### 1. TTFT 高吗？
+
+- 如果高，优先怀疑 queue、prefill、长 prompt、编译缓存、首轮构图
+
+### 2. TPOT 高吗？
+
+- 如果高，优先怀疑 decode、KV 读取、allocator、碎小 kernel
+
+### 3. 并发一上来就塌吗？
+
+- 如果是，优先怀疑 batching、调度、KV 分页、显存碎片、长度混跑
+
+这个顺序的价值在于：
+
+- 不会把所有“慢”都误判成 attention kernel 问题；
+- 能先分清是**少存、少搬、还是少等**出了问题。
+
+## AI Infra / Serving 视角
+
+把这页和 `06 Kernel/Triton`、`12 评测` 连起来看，会发现推理优化其实是“模型、系统、指标”三方同时博弈：
+
+- kernel 优化想提高单次执行效率；
+- serving 调度想提高并发下的整体利用率；
+- 产品指标又要求 TTFT、TPOT、p99 和成本一起过线。
+
+所以真正成熟的推理优化回答，最好都带着一句补充：
+
+> 这个优化到底是在改善 TTFT、TPOT、吞吐还是尾延迟？它又牺牲了什么？
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：模型离线 benchmark 很快，但上线后 TTFT 和 p99 都很差。
+
+- **误判**：第一反应通常是“模型太大”或“GPU 算力不够”，于是只想继续压 kernel 时间。
+- **根因**：线上瓶颈经常不在单次 forward，而在 `排队 + prefill 资源争抢 + KV cache 扩容 + 长短请求混跑`。
+- **解决动作**：
+    - 先把请求时延拆成 `排队 / prefill / decode / 后处理`；
+    - 按 prompt 长度和输出长度分桶看 TTFT、TPOT；
+    - 再判断问题主要来自算子、调度还是 allocator。
+- **复盘**：推理优化如果只看平均 tokens/s，很容易把“用户体感很差”的系统误判成“整体还不错”。
+
+> 常见异常：长上下文并发时显存突然飙升，随后吞吐掉得很厉害。
+
+- 这种情况优先怀疑 **KV cache 占用增长曲线**、**分页 / 分块策略** 和 **allocator 抖动**，而不是先怀疑权重文件本身。
 
 ## 面试里可以怎么讲
 

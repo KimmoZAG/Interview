@@ -4,12 +4,23 @@
 
 课程导航：上一讲 [03 架构与超参数](03-architectures-and-hyperparameters.md)｜课程索引 [00-index](00-index.md)｜学习路线 [study-roadmap](study-roadmap.md)｜面试指南 [interview-prep-guide](interview-prep-guide.md)｜下一讲 [05 GPU 基础](05-gpus.md)
 
+工程桥接：[`AI Infra / MoE 最小导读`](../ai-infra/03-llm-architecture/06-moe-minimum.md) ｜ [`AI Infra / 训练并行策略`](../ai-infra/04-communication/01-training-parallelism.md) ｜ [`AI Infra / Collectives`](../ai-infra/04-communication/04-collectives.md)
+
 ## 先抓住这讲要点
 
 - MoE 的本质：**让参数量增长得比 FLOPs 更快**。
 - 它通常把 dense FFN 换成多个 expert，再用 router 只激活其中少数几个。
 - MoE 的主要难点不在“公式”，而在**路由、负载均衡、通信与训练稳定性**。
 - 真正让 MoE 难落地的，不是 `top-k` 三个字符，而是 all-to-all、dead expert、capacity overflow、fine-tuning fragility 这些工程问题。
+
+## 为什么这页很关键
+
+MoE 是课程里一个非常典型的“模型问题瞬间变系统问题”的例子：
+
+- 从论文视角看，它像是在讨论稀疏激活；
+- 从工程视角看，它在讨论路由、负载均衡、通信和训练动态。
+
+这也是它特别适合作为模型岗和系统岗交界面试题的原因。
 
 ## 代表图
 
@@ -215,6 +226,22 @@ def load_balance_penalty(actual_fraction, router_prob):
 
 > 主要不是前向公式，而是系统实现和训练稳定性。比如 top-k 路由后会有跨设备 token dispatch、all-to-all 通信、capacity overflow、dead experts、负载不均和 fine-tuning 脆弱性，所以 MoE 常常是用系统复杂度换参数效率。
 
+## Troubleshooting：为什么 MoE 理论上更省，实际却更慢
+
+| 现象 | 第一怀疑点 | 如何验证 |
+|---|---|---|
+| FLOPs 漂亮，step time 一般 | all-to-all 吃掉收益 | 看通信时间占比和 rank 级分布 |
+| 少数 rank 持续慢 | router 倾斜或 expert 过热 | 看 expert 热度和 rank 级 step time |
+| 训练能收敛，但吞吐低 | token dispatch / gather 路径低效 | 看路由后数据重排和通信链路 |
+| fine-tuning 特别脆 | expert 过拟合或路由分布漂移 | 对比 dense / MoE 下游稳定性 |
+
+### 一个工程化判断顺序
+
+1. 先分清比较的是总参数量还是每 token 激活参数量。
+2. 再看收益到底该体现为能力提升、吞吐改善，还是单位 FLOPs 更高容量。
+3. 然后检查 router、capacity、all-to-all 和 dead expert 问题。
+4. 最后再决定这是模型收益不足，还是系统实现没把理论收益兑现出来。
+
 ## 本讲小结
 
 MoE 的本质可以浓缩成一句话：
@@ -227,6 +254,14 @@ MoE 的本质可以浓缩成一句话：
 - 通信链路够不够顺；
 - 训练是否稳定；
 - 推理时延是否可控。
+
+## 推理优化 / AI Infra 视角
+
+如果你更偏系统岗，这页最值得掌握的不是 top-k 公式，而是这条链：
+
+`router -> token dispatch -> all-to-all -> expert 负载 -> 吞吐 / 尾延迟`
+
+能把这条链讲清楚，MoE 题就不会只停在“稀疏激活更省 FLOPs”这一层。
 
 ## 复习题
 

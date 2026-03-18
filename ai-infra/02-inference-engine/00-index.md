@@ -14,7 +14,42 @@
 8. 可观测性与调试：TTFT / TPOT / p95 / tracing / profiling
 9. 长上下文 Serving
 
+## 推荐按“推理系统主线”复习
+
+如果你主要目标是推理优化 / serving / AI Infra 面试，建议优先沿下面这条链走：
+
+`[推理栈全景](01-inference-stack-overview.md)`
+→ `[Runtime：ONNX Runtime / TensorRT](02-runtime-onnxruntime-tensorrt.md)`
+→ `[图编译：TVM / MLIR / XLA](03-graph-compiler-tvm-mlir-xla.md)`
+→ `[LLM Serving](04-llm-serving.md)`
+→ `[推理优化 Playbook](05-optimization-playbook.md)`
+→ `[可观测性与调试](06-observability-and-debugging.md)`
+→ `[Paged KV 与 Allocator](07-paged-kv-and-allocator.md)`
+→ `[长上下文 Serving](08-long-context-serving.md)`
+
+这条链分别回答：
+
+- 请求如何进入系统
+- runtime 如何决定真正执行路径
+- 图编译如何把高层图变成更高效的执行计划
+- 系统如何调度与合批
+- 慢了以后怎么定位
+- 需要看哪些指标和证据
+- KV 与显存为什么会成为核心状态问题
+- 长上下文为什么会把整条链一起放大
+
 ## 存量内容映射
+
+- [推理栈全景：前端→图→kernel→执行](01-inference-stack-overview.md)
+- [Runtime：ONNX Runtime / TensorRT](02-runtime-onnxruntime-tensorrt.md)
+- [图编译：TVM / MLIR / XLA](03-graph-compiler-tvm-mlir-xla.md)
+- [LLM Serving：batching、paged KV、常见方案](04-llm-serving.md)
+- [推理优化 Playbook](05-optimization-playbook.md)
+- [可观测性与调试](06-observability-and-debugging.md)
+- [Paged KV 与 Allocator](07-paged-kv-and-allocator.md)
+- [长上下文 Serving](08-long-context-serving.md)
+
+## 已完成“实战型重构”的核心页
 
 - [推理栈全景：前端→图→kernel→执行](01-inference-stack-overview.md)
 - [Runtime：ONNX Runtime / TensorRT](02-runtime-onnxruntime-tensorrt.md)

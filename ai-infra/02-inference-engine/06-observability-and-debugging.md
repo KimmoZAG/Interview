@@ -1,5 +1,18 @@
 # 可观测性与调试（profiling、tracing、metrics）
 
+## 核心定义（What & Why）
+
+> **一句话总结**：可观测性与调试是在推理系统里把“感觉不对”翻译成“哪一段链路、哪类请求、哪版变更、哪一个热点在出问题”的证据系统，它解决的是没有证据就会疯狂误判的问题。
+
+## 关联知识网络
+
+- 前置：[`LLM Serving`](04-llm-serving.md)
+- 前置：[`推理优化 Playbook`](05-optimization-playbook.md)
+- 平行：[`Paged KV 与 Allocator`](07-paged-kv-and-allocator.md)
+- 平行：[`Attention 与 KV Cache`](../03-llm-architecture/02-attention-kv-cache.md)
+- 课程桥接：[`CS336 / 06 Kernel、Profiling 与 Triton`](../../cs336/06-kernels-and-triton.md)
+- 课程桥接：[`CS336 / 10 推理优化`](../../cs336/10-inference.md)
+
 ## 要点
 
 - 没有可观测性就很难做性能/稳定性闭环
@@ -85,6 +98,14 @@
 
 - “慢”到底是 workload 变了，还是实现变了
 
+## 对比表：metrics / trace / profiler 分别该拿来干什么
+
+| 工具层 | 最适合回答的问题 | 看什么 | 常见误用 |
+|---|---|---|---|
+| Metrics | 系统整体趋势和分布怎么变了 | TTFT、TPOT、QPS、p95/p99、显存 | 只看平均值 |
+| Trace | 单个请求到底卡在哪一段 | queue、tokenize、prefill、decode、postprocess span | 只有总耗时没有阶段链路 |
+| Profiler | 函数 / 算子 / kernel 到底慢在哪 | kernel 时间、次数、带宽、CPU 热点 | 把 profiler 当成整体 KPI 面板 |
+
 ## Tracing
 
 - 关键 span：tokenize、prefill、decode 循环、postprocess
@@ -166,6 +187,22 @@
 - launch overhead 或融合不足在伤你
 
 而不是简单的“GPU 很忙所以没问题”。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：GPU utilization 不低，团队直觉觉得“卡已经很忙了”，但用户仍然抱怨系统慢。
+
+- **误判**：把 GPU 利用率当成一切正常的证据。
+- **根因**：GPU“忙”不代表它在高效做正确的事——小 kernel 太碎、同步点太多、KV 访存拖慢、或者请求已经在队列里排半天，都可能让利用率看着不低但体验很差。
+- **解决动作**：
+	- 先拆 TTFT / TPOT / p95 / p99；
+	- 再补请求级 trace，把 queue、prefill、decode 分开；
+	- 最后再用 profiler 看热点 kernel 和 launch 形态。
+- **复盘**：单个“高利用率”指标，远不如一张分阶段、分桶、能追请求的观测图值钱。
+
+> 常见异常：版本上线后平均指标看不太出来，但用户投诉突然增多。
+
+- 这通常说明被平均值洗平了；优先按输入长度、并发水平、模型版本和采样参数做分桶，再看尾部桶是否已经坏掉。
 
 ## 变更回归该怎么做
 

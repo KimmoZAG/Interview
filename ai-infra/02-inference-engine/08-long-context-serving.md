@@ -1,5 +1,18 @@
 # 长上下文训练与推理：瓶颈为什么会成倍放大
 
+## 核心定义（What & Why）
+
+> **一句话总结**：长上下文问题不是“把窗口调长”这么简单，而是把 attention、KV cache、allocator、batching、训练激活和 serving 调度一起放大的系统性压力测试，它解决的是模型是否真的能在更长序列下保持可训练、可推理、可服务。
+
+## 关联知识网络
+
+- 前置：[`LLM Serving`](04-llm-serving.md)
+- 前置：[`Paged KV 与 Allocator`](07-paged-kv-and-allocator.md)
+- 平行：[`Attention 与 KV Cache`](../03-llm-architecture/02-attention-kv-cache.md)
+- 平行：[`训练资源核算`](../03-llm-architecture/07-training-resource-accounting.md)
+- 排障：[`可观测性与调试`](06-observability-and-debugging.md)
+- 课程桥接：[`CS336 / 10 推理优化`](../../cs336/10-inference.md)
+
 ## 要点
 
 - 长上下文不是简单地把 context window 从 4k 改成 32k 或 128k，而是会系统性放大 attention、KV cache、数据打包、训练稳定性和 serving 调度问题。
@@ -122,6 +135,15 @@
 - p95 / p99
 - 显存稳定性
 
+## 对比表：长上下文首先会把哪些东西放大
+
+| 维度 | 变长后首先受压的地方 | 常见症状 | 第一反应该看什么 |
+|---|---|---|---|
+| 训练 | 激活、attention 中间量、micro-batch | OOM、step time 上升 | batch / context / checkpointing |
+| Prefill | 大 prompt 处理成本 | TTFT 上升 | 长度分桶、prefill profile |
+| Decode | 历史 KV 读取、allocator | TPOT 上升、p99 抖动 | KV 占用、block 利用率 |
+| Serving | 长短请求混跑 | 短请求体验恶化 | 队列策略、隔离、长度桶 |
+
 ## 4. 为什么它会把很多旧问题一起放大
 
 长上下文会同时把下面这些议题推上前台：
@@ -199,6 +221,18 @@
 - 显存稳定性
 
 这个支持往往只是功能层面的，不是系统层面的。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：模型“支持 32k context”，但线上一有长请求流量，TTFT 和 p99 就明显恶化。
+
+- **误判**：以为模型既然能跑过超长 demo，就说明系统已经准备好上线长上下文。
+- **根因**：模型功能支持和系统工程支持不是一回事；长 prompt prefill、KV cache 增长、allocator 压力、长短请求混跑都会让真实服务成本急剧上升。
+- **解决动作**：
+  - 先按长度分桶看 TTFT、TPOT、p95/p99；
+  - 再看长请求是否把短请求拖坏；
+  - 最后决定是做隔离策略、chunked prefill，还是单独给超长请求更贵但更稳的服务路径。
+- **复盘**：长上下文最危险的地方不是“能不能跑通”，而是“跑通后系统还稳不稳、贵不贵、拖不拖别人”。
 
 ## 7. 应该如何做实验
 

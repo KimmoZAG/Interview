@@ -1,5 +1,18 @@
 # 推理优化 Playbook（定位→动作→验证）
 
+## 核心定义（What & Why）
+
+> **一句话总结**：推理优化 Playbook 是一套把“慢了”拆成可定位、可选择动作、可验证收益的系统诊断方法，它解决的是线上推理问题复杂且易误判的现实痛点。
+
+## 关联知识网络
+
+- 前置：[`LLM Serving`](04-llm-serving.md)
+- 前置：[`可观测性与调试`](06-observability-and-debugging.md)
+- 平行：[`Paged KV 与 Allocator`](07-paged-kv-and-allocator.md)
+- 平行：[`Attention 与 KV Cache`](../03-llm-architecture/02-attention-kv-cache.md)
+- 课程桥接：[`CS336 / 10 推理优化`](../../cs336/10-inference.md)
+- 课程桥接：[`CS336 / 06 Kernel、Profiling 与 Triton`](../../cs336/06-kernels-and-triton.md)
+
 ## 要点
 
 - 优化要闭环：**定位瓶颈 → 选择动作 → 验证正确性 → 验证性能曲线**
@@ -114,6 +127,15 @@ Playbook 不是一份“万能优化招式表”，而是一套工作方法：
 - 请求合并策略是否保守
 - GPU 是否被 CPU / I/O / host scheduling 卡住
 
+## 对比表：常见线上症状应该先怀疑什么
+
+| 现象 | 更像哪类问题 | 第一批该看的证据 | 常见误判 |
+|---|---|---|---|
+| TTFT 高，TPOT 正常 | queue / tokenize / prefill 问题 | 分阶段时延、长度分桶、trace | 一上来就换 decode attention kernel |
+| TPOT 高，TTFT 正常 | decode / KV / allocator / 小 kernel 问题 | decode profile、KV 占用、kernel 次数 | 误以为整条链都慢 |
+| p99 差，平均值正常 | 请求混跑 / 尾部抖动 / 碎片问题 | p95/p99、长度桶、显存波动 | 只看平均 tokens/s |
+| 吞吐低但平均延迟不高 | batch 合并 / CPU 前处理 / host 调度问题 | QPS、batch size、CPU 利用率 | 盲目上更激进量化或大 kernel |
+
 ## 最小例子
 
 假设线上现象是：
@@ -170,6 +192,18 @@ Playbook 不是一份“万能优化招式表”，而是一套工作方法：
 - 长短请求分桶后，提升是否仍然存在？
 
 如果这些问题答不上来，那“性能提升”这句话通常还不完整。
+
+## 💥 实战踩坑记录（Troubleshooting）
+
+> 现象：量化后单请求 benchmark 漂亮了，但线上 TTFT 和 p99 反而变差。
+
+- **误判**：只看 steady-state tokens/s，就宣布“优化成功”。
+- **根因**：量化收益主要落在某些 decode kernel 上，但 queue、prefill、长度混跑和 allocator 抖动仍在伤用户体验。
+- **解决动作**：
+  - 先把 TTFT、TPOT、吞吐、p95/p99 分开；
+  - 再按输入长度 / 输出长度 / 并发分桶；
+  - 最后确认收益是端到端成立，而不是只在某一个微基准 shape 下成立。
+- **复盘**：真正的系统优化，要防止“一个局部指标更好，用户体感却更差”。
 
 ## 推理优化工程师视角
 

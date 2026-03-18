@@ -23,6 +23,16 @@
 - [MoE 最小导读](06-moe-minimum.md)
 - [训练资源核算（选修）](07-training-resource-accounting.md)
 
+## 已完成“实战型重构”的核心页
+
+- [Transformer 推理所需的最小知识](01-transformer-minimum.md)
+- [Attention、KV cache 与吞吐/延迟](02-attention-kv-cache.md)
+- [常见层：Norm/激活/残差 与数值稳定性](03-norm-activation-stability.md)
+- [Tokenizer 与采样](04-tokenization-and-sampling.md)
+- [评测与基准：accuracy/latency/throughput](05-evaluation-and-benchmarking.md)
+- [MoE 最小导读](06-moe-minimum.md)
+- [训练资源核算（选修）](07-training-resource-accounting.md)
+
 ## 后续补强建议
 
 - 重写 `Attention 与 KV Cache` 的边界：只讲模型语义和成本，不展开 allocator 细节
