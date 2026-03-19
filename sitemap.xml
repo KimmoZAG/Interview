@@ -81,10 +81,6 @@
          <lastmod>2026-03-19</lastmod>
     </url>
     <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/02-inference-engine/09-chitu-inference-engine/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
          <loc>https://kimmozag.github.io/Interview/ai-infra/03-llm-architecture/00-index/</loc>
          <lastmod>2026-03-19</lastmod>
     </url>
@@ -193,30 +189,6 @@
          <lastmod>2026-03-19</lastmod>
     </url>
     <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/00-index/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/01-architecture-overview/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/02-model-loading/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/03-model-registry/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/04-custom-ops-and-operator-replacement/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
-         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/05-inference-acceleration/</loc>
-         <lastmod>2026-03-19</lastmod>
-    </url>
-    <url>
          <loc>https://kimmozag.github.io/Interview/c%2B%2B/</loc>
          <lastmod>2026-03-19</lastmod>
     </url>
@@ -286,6 +258,14 @@
     </url>
     <url>
          <loc>https://kimmozag.github.io/Interview/c%2B%2B/versions/cpp23/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/chitu/00-index/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/chitu/09-chitu-inference-engine/</loc>
          <lastmod>2026-03-19</lastmod>
     </url>
     <url>
@@ -442,6 +422,30 @@
     </url>
     <url>
          <loc>https://kimmozag.github.io/Interview/reference/tags/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/vllm/00-index/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/vllm/01-architecture-overview/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/vllm/02-model-loading/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/vllm/03-model-registry/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/vllm/04-custom-ops-and-operator-replacement/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/vllm/05-inference-acceleration/</loc>
          <lastmod>2026-03-19</lastmod>
     </url>
 </urlset>
