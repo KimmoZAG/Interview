@@ -151,6 +151,13 @@ flowchart TD
 
 ### 统一模板
 
+每个小章节都必须至少包含：
+
+1. **背景**：为什么有这个技术、它解决什么痛点、旧方案为什么失败
+2. **技术介绍**：重点讲实现机制，并尽量结合**原汁原味的代码**
+3. **面试考点**
+4. **思考题**
+
 - 通用写作规范：[`reference/note-writing-playbook.md`](reference/note-writing-playbook.md)
 - AI Infra 章节模板：[`ai-infra/05-appendix/chapter-template.md`](ai-infra/05-appendix/chapter-template.md)
 
