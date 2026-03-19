@@ -26,6 +26,57 @@ DeepSeekMoE 的核心判断因此非常明确：
 - 表 3：核心设计收益与代价总表
 - 表 4：与 Switch / GShard / dense Transformer 的对比表
 
+## 图表总览（先看这块）
+
+### 图 1：DeepSeekMoE 机制总览图（Mermaid）
+
+```mermaid
+flowchart LR
+    A[Token hidden state u_t] --> B[Router affinity scoring]
+    B --> C[Shared experts<br/>always activated]
+    B --> D[Top-k routed experts<br/>selected by router]
+    C --> E[Shared expert outputs]
+    D --> F[Weighted routed outputs]
+    E --> G[Aggregation + residual]
+    F --> G
+    G --> H[MoE layer output h_t']
+```
+
+### 表 1：Shared experts 与 routed experts 的职责划分
+
+| 角色 | 激活方式 | 主要职责 | 解决的问题 |
+|---|---|---|---|
+| Shared experts | 每个 token 恒定经过 | 承接跨上下文共享的公共知识 | 缓解 routed experts 的知识冗余 |
+| Routed experts | 由 router 动态 top-k 选择 | 承接更细粒度、更具区分性的知识 | 提高 expert specialization |
+
+### 表 2：训练侧通信与路由工程问题对照表
+
+| 工程问题 | DeepSeek 的处理方式 | 作用 |
+|---|---|---|
+| 激活 experts 多，跨设备 fan-out 高 | Device-limited routing，限制每 token 覆盖设备数 $M$ | 限制通信爆炸 |
+| expert parallel 下负载不均 | Expert / device / communication 三层 balance loss | 降低训练尾部瓶颈 |
+| 通信时间吞掉稀疏收益 | overlap shared expert computation with all-to-all | 提高计算通信重叠 |
+| 稀疏激活参数较少但并行复杂 | 尽量避免 tensor parallelism | 降低额外通信 |
+| 路由与通信本身开销高 | 自定义 CUDA kernels 优化通信、路由和融合算子 | 提高训练效率 |
+
+### 表 3：核心设计收益与代价总表
+
+| 设计点 | 主要解决什么瓶颈 | 获得了什么 | 付出的代价 | 后续版本如何补强 |
+|---|---|---|---|---|
+| 细粒度专家拆分 | 粗粒度 expert 知识混装 | 更高组合自由度、更细知识分工 | 激活 expert 数增加，通信与 bookkeeping 更重 | V2 引入 device-limited routing |
+| Shared expert isolation | routed experts 公共知识冗余 | 公共知识集中承接，routed experts 更专精 | shared path 恒定计算，结构更复杂 | V2/V3 继续保留该结构 |
+| Expert/device balance loss | routing collapse 与设备负载倾斜 | 提升训练稳定性与并行效率 | auxiliary loss 过大可能伤主目标 | V3 改成 aux-loss-free balancing |
+| Device-limited routing | 细粒度 MoE 的跨设备 fan-out | 控制通信边界 | 路由自由度被轻度约束 | V2 实践表明 $M \ge 3$ 基本不伤性能 |
+
+### 表 4：与 Switch / GShard / dense Transformer 的对比表
+
+| 方案 | 路由方式 | expert 粒度 | 公共知识处理 | 主要优点 | 主要弱点 |
+|---|---|---|---|---|---|
+| Switch Transformer | top-1 | 粗粒度 | 无显式 shared experts | 路由简单，工程实现相对直接 | 表达与组合能力较弱 |
+| GShard | top-2 | 粗粒度 | 无显式 shared experts | 比 top-1 表达力更强 | 仍有知识混装与冗余问题 |
+| DeepSeekMoE | fine-grained top-$mK$ + shared experts | 细粒度 | shared experts 显式承接公共知识 | 更强 expert specialization、更高参数利用率 | 通信与负载均衡问题更尖锐 |
+| 传统 dense Transformer | 非稀疏（无路由） | 无专家划分 | 无 shared/routed 分工 | 训练路径规整、实现成熟 | 参数与计算基本同步增长，扩容成本高 |
+
 ## 关键结论
 
 - DeepSeekMoE 的核心创新不是“把 MoE 做得更大”，而是把 expert 的粒度与职责重新设计成更适合 specialization 的形式。[DeepSeekMoE, Sections 1, 3]
