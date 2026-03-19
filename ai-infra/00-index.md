@@ -56,6 +56,14 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 
     [:octicons-arrow-right-24: 进入](06-vllm/00-index.md)
 
+- :material-rabbit: **赤兔推理引擎**
+
+    ---
+
+    聚焦 Chitu 的动态批处理、KV 管理、量化、硬件适配与阿里云 PAI 协同，适合做专项面试准备。
+
+    [:octicons-arrow-right-24: 进入](07-chitu/00-index.md)
+
 - :material-bookshelf: **附录**
 
     ---
@@ -159,6 +167,12 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 | [多模型支持与注册](06-vllm/03-model-registry.md) | ModelRegistry 工作原理，如何接入新架构（LLaMA / Qwen / DeepSeek 等）|
 | [算子替换与定制](06-vllm/04-custom-ops-and-operator-replacement.md) | 注意力后端热插拔、量化线性层替换、自定义 CUDA kernel 注入 |
 | [推理加速技术](06-vllm/05-inference-acceleration.md) | PagedAttention / 连续批处理 / CUDA Graphs / 前缀缓存 / 投机解码 |
+
+### 赤兔推理引擎
+
+| 篇目 | 核心问题 |
+|---|---|
+| [赤兔（Chitu）推理引擎：面试备战笔记](07-chitu/09-chitu-inference-engine.md) | 动态批处理、KV 管理、量化、硬件适配，以及与 vLLM / TensorRT-LLM 的场景对比 |
 
 ---
 
