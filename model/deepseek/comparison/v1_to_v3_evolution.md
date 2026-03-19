@@ -26,6 +26,26 @@
 - 表 6：关键设计取舍总表
 - 表 7：与 Llama / GPT 风格路线对比表
 
+## 图表总览（重绘版，先看这块）
+
+### 图 1：架构—训练—系统—能力共同演化图（Mermaid）
+
+```mermaid
+flowchart LR
+    A[DeepSeekMoE<br/>专家专门化] --> B[DeepSeek-V2<br/>MLA + 路由约束]
+    B --> C[DeepSeek-V3<br/>系统协同 + FP8 + DualPipe]
+    C --> D[DeepSeek-R1<br/>GRPO + 多阶段 RL/SFT]
+```
+
+### 表 1：代际核心指标总表（精简）
+
+| 代际 | 核心动作 | 主要收益 | 主要代价 |
+| --- | --- | --- | --- |
+| DeepSeekMoE | 细粒度专家与共享专家 | 提升参数利用率 | 路由与通信复杂度上升 |
+| DeepSeek-V2 | MLA + device-limited routing | KV cache/吞吐显著改善 | 实现复杂度提升 |
+| DeepSeek-V3 | aux-loss-free + DualPipe + FP8 | 超大规模训练与部署更可扩展 | 系统工程门槛更高 |
+| DeepSeek-R1 | GRPO + 多阶段对齐 | reasoning 显著增强 | 可读性/稳定性需额外修正 |
+
 ## 关键结论
 
 - DeepSeek 的演进主线不是单一维度的 scaling，而是 **架构稀疏化 → KV 压缩 → 系统协同 → RL reasoning** 的连续推进。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]

@@ -60,6 +60,55 @@ DeepSeek 路线在这一点上的演进很有代表性：
 - 表 1：与 DeepSeekMoE / Switch / GShard 的对比
 - 表 2：V2 / V3 路由关键设置
 
+## 图表总览（重绘版，先看这块）
+
+### 图 1：路由机制总览图（Mermaid）
+
+```mermaid
+flowchart TD
+  A[Token u_t] --> B[Affinity Scoring]
+  B --> C{Routing}
+  C --> V2[V2: device-limited top-k]
+  C --> V3[V3: node-limited top-k + bias]
+  V2 --> L2[Aux losses: expert/device/comm]
+  V3 --> L3[Aux-loss-free bias update]
+  L2 --> D[Dispatch]
+  L3 --> D
+  D --> E[Experts Compute]
+  E --> F[Combine Output]
+```
+
+### 图 2：路由与负载均衡系统流（Mermaid）
+
+```mermaid
+flowchart LR
+  S[Router Scores] --> T[Top-k Selection]
+  T --> X[Token-to-Expert Dispatch]
+  X --> C[Cross-device/node Communication]
+  C --> P[Expert Parallel Compute]
+  P --> R[Combine]
+  R --> M[Load Stats Monitor]
+  M --> B[Bias / Balance Control]
+  B --> T
+```
+
+### 表 1：DeepSeekMoE / V2 / V3 路由策略对比（精简）
+
+| 阶段 | 路由核心 | 平衡机制 | 系统取舍 |
+| --- | --- | --- | --- |
+| DeepSeekMoE | affinity + top-k | expert/device loss | 先解决专精化 |
+| V2 | device-limited routing | expert/device/comm loss | 控通信上界 |
+| V3 | node-limited + bias routing | aux-loss-free 为主 | 减少 loss 对性能干扰 |
+
+### 表 2：V2 / V3 关键设置
+
+| 项目 | V2 | V3 |
+| --- | --- | --- |
+| 路由约束粒度 | 设备级 | 节点级 |
+| gating 分数形式 | softmax affinity | sigmoid + 归一化 |
+| 负载均衡主机制 | 辅助损失 | bias-based 控制 |
+| token dropping | 有兜底机制 | 训练/推理 no token-dropping（论文设定） |
+
 ## 核心机制
 
 ### 路由机制总览图

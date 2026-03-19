@@ -22,6 +22,39 @@
 - 表 4：工程实现重点总览
 - 表 5：与 Llama / GPT / 传统 Transformer 路线对比
 
+## 图表总览（重绘版，先看这块）
+
+### 图 1：DeepSeek 三条主线演进路线图（Mermaid）
+
+```mermaid
+flowchart LR
+    A[DeepSeekMoE<br/>提高专家专门化] --> B[DeepSeek-V2<br/>MLA + MoE + 路由约束]
+    B --> C[DeepSeek-V3<br/>负载均衡 + MTP + 系统优化]
+    C --> D[DeepSeek-R1<br/>GRPO + 多阶段 RL/SFT]
+
+    A1[算法创新] --> A
+    B1[工程优化] --> B
+    C1[系统协同] --> C
+    D1[训练与对齐] --> D
+```
+
+### 表 1：DeepSeek 系列时间线（精简）
+
+| 论文 | 核心动作 | 直接收益 |
+| --- | --- | --- |
+| DeepSeekMoE | 细粒度专家 + 共享专家隔离 | 提升 expert specialization |
+| DeepSeek-V2 | MLA + device-limited routing | 降 KV cache、控通信成本 |
+| DeepSeek-V3 | aux-loss-free balance + DualPipe + FP8 | 放大训练与部署效率 |
+| DeepSeek-R1 | GRPO + 多阶段 RL/SFT | reasoning 行为显式增强 |
+
+### 表 2：三条主线如何协同
+
+| 主线 | 关注点 | 最终作用 |
+| --- | --- | --- |
+| 算法创新 | 稀疏容量与注意力结构 | 提高单位计算的能力密度 |
+| 工程优化 | 通信、显存、并行、部署 | 把论文收益兑现为系统收益 |
+| 训练与对齐 | SFT/RL/GRPO | 把基座能力转成推理能力 |
+
 ## 关键结论
 
 - DeepSeek 的主线不是“单纯扩大模型”，而是把 **算法创新、工程优化、训练与对齐** 联合成一个预算重分配问题。[DeepSeek-V2, Abstract; DeepSeek-V3, Abstract; DeepSeek-R1, Section 6]
