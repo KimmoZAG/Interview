@@ -1,174 +1,107 @@
 # DeepSeek 总览：从稀疏架构到推理强化
 
-## 背景 / 问题定义
-
-如果把 DeepSeek 系列看成四篇彼此独立的论文，很容易得到一个误判：DeepSeek 只是先做了 MoE，再做了 MLA，再做了 RL。更准确的理解是，DeepSeek 一直在围绕同一个工程问题演进：**如何在固定甚至受限的算力预算下，把参数效率、推理效率、系统可扩展性和 reasoning 能力同时抬高**。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
-
-这条路线与典型的 dense-first 路线不同。它不是先把 dense 基座做大，再让系统工程去追赶模型；而是较早把架构稀疏化、KV cache 压缩、通信优化、负载均衡和后训练强化放进同一张路线图里。结果是，DeepSeek 的每一代都不只是“模型更强了一点”，而是在回答不同层面的瓶颈：
-
-- DeepSeekMoE：MoE 是否真的带来更高的有效参数利用率，而不是更高的参数冗余？[DeepSeekMoE, Sections 1, 3]
-- DeepSeek-V2：即使 MoE 可训，可否进一步把推理端的 KV cache 和通信成本降下来？[DeepSeek-V2, Sections 2.1-2.2]
-- DeepSeek-V3：当模型进入数百 B 规模时，是否还能把 load balance、all-to-all、pipeline 与精度问题一起控住？[DeepSeek-V3, Sections 2-3]
-- DeepSeek-R1：当 base model 已足够强时，是否可以把算力继续投向 reasoning 行为本身，而不是只投向更长的预训练？[DeepSeek-R1, Sections 1-3]
-
-**本页的目标**不是复述四篇论文，而是把这条路线收敛成一条适合 MkDocs 长期维护的总览主线，帮助读者先建立地图，再进入后续专题页。
-
-## 图表清单
-
-DeepSeek 的主线不该被理解成“先做 MoE，再做 MLA，再做 RL”的论文串联；更准确的理解是：**它一直在同一个预算约束下，持续重分配算力，把参数效率、推理效率、系统可扩展性和 reasoning 能力一起往上推。**[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
-
-- **DeepSeekMoE**：先解决“更多参数是否真的变成更高有效容量”。
-- **DeepSeek-V2**：再解决“即使 MoE 可训，可否把 KV cache 与通信成本也一起压下来”。
-- **DeepSeek-V3**：继续解决“超大 MoE 的训练、通信、负载均衡和部署是否还能同时成立”。
-- **DeepSeek-R1**：最后把节省下来的预算继续投向 reasoning 行为本身，而不是只投向更长预训练。
-
-本页的作用不是复述论文，而是先给出一张稳定地图，帮助读者进入后续专题页时不迷路。
-- 如果你读到跨页重复的公式，请把专题页当作主定义页：`architecture/mla_attention.md` 负责 MLA，`training/rl_and_alignment.md` 负责 GRPO，`training/reward_design_and_verifiers.md` 负责奖励与 verifier。
-- 如果你只想抓住工程落地顺序，可以按“架构 → 路由/长上下文 → 训练与对齐 → 工程系统”来读，而不是在每页里来回跳。
-
-## 图表总览（重绘版，先看这块）
-
-### 图 1：DeepSeek 三条主线演进路线图（Mermaid）
-
-```mermaid
-flowchart LR
-    A[DeepSeekMoE<br/>提高专家专门化] --> B[DeepSeek-V2<br/>MLA + MoE + 路由约束]
-    B --> C[DeepSeek-V3<br/>负载均衡 + MTP + 系统优化]
-    C --> D[DeepSeek-R1<br/>GRPO + 多阶段 RL/SFT]
-
-    A1[算法创新] --> A
-    B1[工程优化] --> B
-    C1[系统协同] --> C
-    D1[训练与对齐] --> D
-```
-
-### 表 1：DeepSeek 系列时间线（精简）
-
-| 论文 | 核心动作 | 直接收益 |
-| --- | --- | --- |
-| DeepSeekMoE | 细粒度专家 + 共享专家隔离 | 提升 expert specialization |
-| DeepSeek-V2 | MLA + device-limited routing | 降 KV cache、控通信成本 |
-| DeepSeek-V3 | aux-loss-free balance + DualPipe + FP8 | 放大训练与部署效率 |
-| DeepSeek-R1 | GRPO + 多阶段 RL/SFT | reasoning 行为显式增强 |
-
-### 表 2：三条主线如何协同
-
-| 主线 | 关注点 | 最终作用 |
-| --- | --- | --- |
-| 算法创新 | 稀疏容量与注意力结构 | 提高单位计算的能力密度 |
-| 工程优化 | 通信、显存、并行、部署 | 把论文收益兑现为系统收益 |
-| 训练与对齐 | SFT/RL/GRPO | 把基座能力转成推理能力 |
-
 ## 关键结论
 
-- DeepSeek 的主线不是“单纯扩大模型”，而是把 **算法创新、工程优化、训练与对齐** 联合成一个预算重分配问题。[DeepSeek-V2, Abstract; DeepSeek-V3, Abstract; DeepSeek-R1, Section 6]
-- DeepSeekMoE 解决的是专家专门化问题；V2 解决的是 KV cache 与通信问题；V3 解决的是超大 MoE 的训练与部署协同问题；R1 解决的是 reasoning 行为如何被显式激发与产品化。[DeepSeekMoE, Section 3; DeepSeek-V2, Sections 2-3; DeepSeek-V3, Sections 2-3; DeepSeek-R1, Sections 2-3]
-- 因此，DeepSeek 的关键创新不是某一个模块，而是 **跨代持续协同优化**：先省下算力，再把省下来的预算投入更强的能力增益。[DeepSeek-V2, Section 3.2.3; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Sections 2.1-2.3]
+DeepSeek 这条线最容易被误读成“先做了 MoE，再做了 MLA，再做了 RL”。更准确的理解是：**它一直在围绕同一个问题演进——怎样在有限预算下，把参数效率、推理效率、系统可扩展性和 reasoning 能力一起往上推。**
 
-## 核心机制
+- `DeepSeekMoE` 先解决“参数变多以后，是否真的变成更高有效容量”；
+- `DeepSeek-V2` 再解决“即使 MoE 可训，KV cache 和通信成本能不能继续压下去”；
+- `DeepSeek-V3` 继续解决“超大 MoE 的训练、通信、部署能不能一起成立”；
+- `DeepSeek-R1` 最后把节省出来的预算继续投向 reasoning 行为本身，而不只是继续堆预训练 [DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]。
 
-### DeepSeek 系列发展时间线
+所以这套文档的主线不是“论文串读”，而是：**架构怎么省、系统怎么撑、训练怎么放大 reasoning。**
 
-| 时间 | 论文 | 一句话总结 | 主线位置 |
-| --- | --- | --- | --- |
-| 2024-01 | DeepSeekMoE | 用 fine-grained expert segmentation 和 shared expert isolation，把“MoE 参数多但不够专精”改造成“更专精且更省算”的稀疏架构。[DeepSeekMoE, Section 3] | 算法创新起点 |
-| 2024-05 | DeepSeek-V2 | 用 MLA + DeepSeekMoE + device-limited routing，把“可训的 MoE”推进到“高效训练且高效推理的 MoE”。[DeepSeek-V2, Sections 2.1-2.2] | 架构与推理效率拐点 |
-| 2024-12 / 2025-02 v2 | DeepSeek-V3 | 在 V2 底座上加入 auxiliary-loss-free load balancing、MTP、DualPipe、FP8 与部署优化，把系统协同推到更大规模。[DeepSeek-V3, Abstract; Sections 2-3] | 系统协同放大器 |
-| 2025-01 / 2026-01 v2 | DeepSeek-R1 | 在 DeepSeek-V3-Base 之上，用 GRPO 驱动 reasoning 行为涌现，并通过多阶段训练把 R1-Zero 变成可读、可用、可蒸馏的 reasoning model。[DeepSeek-R1, Sections 1-3] | 训练与对齐跃迁 |
+## 背景：为什么 DeepSeek 值得单独拉成一条主线
 
-### 一张图看懂 DeepSeek 的三条主线
+### 旧的理解为什么不够
 
-```mermaid
-flowchart LR
-    A[DeepSeekMoE<br/>提高专家专门化] --> B[DeepSeek-V2<br/>MLA + MoE + 路由约束]
-    B --> C[DeepSeek-V3<br/>负载均衡 + MTP + 系统优化]
-    C --> D[DeepSeek-R1<br/>GRPO + 多阶段 RL/SFT]
+如果只看 benchmark 或模型规模，很容易把 DeepSeek 理解成一条普通的“大模型继续做大”路线；但它真正特别的地方在于，比较早就把这些问题放到同一张图里考虑：
 
-    A1[算法创新<br/>稀疏 FFN 设计] --> A
-    B1[工程优化<br/>KV 压缩与通信约束] --> B
-    C1[系统协同<br/>DualPipe / All-to-All / FP8] --> C
-    D1[训练与对齐<br/>纯 RL reasoning 到可用产品化] --> D
-```
+- 稀疏架构要不要做；
+- KV cache 和推理吞吐怎么降本；
+- all-to-all、负载均衡、FP8、并行调度怎么一起协同；
+- 后训练到底是“礼貌微调”，还是可以直接变成 reasoning 能力放大器。
 
-### 三条主线如何贯穿整条路线
+也就是说，DeepSeek 的每一代不只是“多了一个新技巧”，而是在回答不同层面的瓶颈。
 
-| 主线 | DeepSeekMoE | DeepSeek-V2 | DeepSeek-V3 | DeepSeek-R1 |
-| --- | --- | --- | --- | --- |
-| 算法创新 | 通过 finer experts + shared experts 提升 expert specialization，目标是减少知识混杂和专家冗余。[DeepSeekMoE, Sections 1, 3] | 引入 MLA，把 attention 的瓶颈从“KV cache 爆炸”改写成“latent compression + decoupled RoPE”。[DeepSeek-V2, Section 2.1] | 用 auxiliary-loss-free balance 与 MTP 解决 MoE 负载均衡和训练信号稀疏问题。[DeepSeek-V3, Sections 2.1.2, 2.2] | 用 GRPO 把 reasoning 从“模仿示范”转为“基于结果的自我改进”。[DeepSeek-R1, Section 2.1] |
-| 工程优化 | 重点仍在验证架构可行性，工程层面以并行训练框架和 gating/融合 kernel 为主。[DeepSeekMoE, Section 4.1.2] | 加入 device-limited routing、通信均衡损失、自定义通信/路由 kernel，开始显式约束系统成本。[DeepSeek-V2, Sections 2.2.2-2.2.3; Section 3.1.3] | DualPipe、跨节点 all-to-all kernel、FP8、prefilling/decoding 分离部署，让超大 MoE 进入“可扩展运营”阶段。[DeepSeek-V3, Sections 3.2-3.4] | 重点转向 RL 基础设施与 reward pipeline 的效率和稳定性，而不是继续扩张 base 架构。[DeepSeek-R1, Sections 2.1-2.2; 3.2] |
-| 训练与对齐 | 16B 版本已验证 SFT 可让 MoE chat 化，但仍以架构验证为主。[DeepSeekMoE, Section 6] | V2 明确采用 SFT + RL，并把 GRPO 用到对齐阶段，但重点仍是通用 chat 能力与推理增益。[DeepSeek-V2, Section 4] | V3 把 post-training 做得更系统，含 SFT、RL 和 generative reward model 讨论。[DeepSeek-V3, Section 5] | R1 将 reasoning 训练推到主舞台：先 R1-Zero 纯 RL，再冷启动、拒绝采样、SFT、第二阶段 RL，形成完整推理对齐流水线。[DeepSeek-R1, Sections 2-3] |
+### 这一页真正想解决什么
 
-## 数学基础
+这一页不打算复述论文细节，而是先帮你搞清楚三件事：
 
-虽然本页是总览页，但如果不点出两个核心数学对象，读者很难理解 DeepSeek 为什么能把架构优化延续到 reasoning 优化。
+1. DeepSeek 这条路线到底在优化什么；
+2. 这套系列文档应该按什么顺序读才不容易迷路；
+3. 如果你只关心某一条线，应该从哪篇开始。
 
-### MLA 的核心：缓存 latent，而不是缓存完整多头 KV
+## DeepSeek 具体怎么做
 
-DeepSeek-V2 / V3 的 MLA 先把 key/value 压缩到低维 latent，再恢复出参与 attention 计算的表示：
+### 第一条线：先把架构做成“更省算、更能扩”的形态
 
-$$
-\mathbf{c}^{KV}_t = W^{DKV}\mathbf{h}_t,
-\quad
-\mathbf{k}^C_t = W^{UK}\mathbf{c}^{KV}_t,
-\quad
-\mathbf{v}^C_t = W^{UV}\mathbf{c}^{KV}_t
-$$
+DeepSeek 在架构层最核心的两步是：
 
-这意味着生成阶段真正需要缓存的是 $\mathbf{c}^{KV}_t$ 以及与位置编码解耦的少量额外分量，而不是传统 MHA 中每个头的完整 $K/V$。因此，V2 才能把 KV cache 压缩到显著更小的量级，并把这部分收益转化为更高吞吐和更长上下文支持。[DeepSeek-V2, Sections 2.1.2-2.1.4]
+- 用 `DeepSeekMoE` 改造传统 MoE，让专家更专门化，减少“参数很多但知识混杂”的情况；
+- 用 `MLA` 改写 attention 的 KV 状态表示，让推理成本不再被传统多头 KV cache 牵着走 [DeepSeekMoE, Sections 1, 3; DeepSeek-V2, Section 2.1]。
 
-### GRPO 的核心：在组内做相对优势优化
+这条线回答的是：**如果单位计算不够值钱，那后面加再多系统优化也很难救。**
 
-R1 则把训练重心从“更强预训练”推进到“更强后训练”。其基础是 GRPO：同一个问题采样一组答案，再用组内 reward 的均值和方差计算相对优势：
+### 第二条线：再把系统做成“真的能把这些收益兑现出来”
 
-$$
-A_i=\frac{r_i-\operatorname{mean}(\{r_1,\dots,r_G\})}{\operatorname{std}(\{r_1,\dots,r_G\})}
-$$
+只有好架构还不够，因为 MoE 一旦放大，通信、路由、负载均衡和并行调度立刻会成为主问题。
 
-这使得 DeepSeek-R1 能在数学、代码、逻辑这类可验证任务上，直接把测试时计算量转化为更强 reasoning 轨迹，而不必依赖完整的 critic 管线。[DeepSeek-R1, Section 2.1]
+所以从 V2 到 V3，DeepSeek 持续把系统问题抬到主线：
 
-## 工程实现
+- `device/node-limited routing`
+- `auxiliary-loss-free load balancing`
+- `DualPipe`
+- `cross-node all-to-all kernels`
+- `FP8`
+- `prefilling / decoding 分离部署` [DeepSeek-V2, Sections 2.2-3.1; DeepSeek-V3, Sections 2-3]
 
-| 代际 | 工程重点 | 关键实现 | 工程意义 |
-| --- | --- | --- | --- |
-| DeepSeekMoE | 让稀疏训练可跑 | HAI-LLM、并行训练、gating 与跨 expert 融合 kernel。[DeepSeekMoE, Section 4.1.2] | 先证明稀疏 FFN 路线不是论文玩具。 |
-| DeepSeek-V2 | 让稀疏推理高效 | Device-limited routing、通信平衡损失、共享专家与 all-to-all overlap、自定义 CUDA kernels。[DeepSeek-V2, Sections 2.2.2-2.2.3; 3.1.3] | 首次把 MoE 通信成本显式写进模型设计。 |
-| DeepSeek-V3 | 让超大 MoE 规模化训练和部署 | DualPipe、cross-node all-to-all kernels、FP8 mixed precision、prefilling/decoding 分离、冗余专家部署。[DeepSeek-V3, Sections 3.2-3.4] | 系统优化从“支持训练”升级为“决定能否扩展”。 |
-| DeepSeek-R1 | 让 RL 流水线可持续迭代 | 大规模 rollout、rule-based reward、reward models、语言一致性奖励、多阶段 RL/SFT pipeline。[DeepSeek-R1, Sections 2.1-2.2; 3.1-3.2] | 后训练开始像一个独立系统工程，而不是单个算法实验。 |
+这条线回答的是：**论文里的结构收益，怎样才能真的落到训练成本和在线吞吐上。**
 
-## Design trade-offs
+### 第三条线：最后把节省出来的预算投向 reasoning
 
-| 设计选择 | 为什么这样设计 | 得到什么 | 牺牲什么 |
-| --- | --- | --- | --- |
-| Fine-grained experts + shared experts | 传统 top-K MoE 中 routed experts 容易混杂知识且重复学习共通知识。[DeepSeekMoE, Section 1] | 更高 expert specialization，更高参数效率。[DeepSeekMoE, Sections 3-4] | 路由和部署复杂度上升，后续必须处理通信与负载均衡。 |
-| MLA 取代标准 MHA/GQA | 推理瓶颈在 KV cache，而不是只在算力本身。[DeepSeek-V2, Section 2.1] | KV cache 显著压缩，吞吐提升，并更容易支持长上下文。[DeepSeek-V2, Abstract; Section 3.2.3] | 需要额外处理 RoPE 兼容性与 latent 投影实现。 |
-| Auxiliary-loss-free load balancing | 纯辅助损失会伤害性能，尤其在超大规模 MoE 上更明显。[DeepSeek-V3, Section 2.1.2] | 在控制负载均衡的同时更好保住模型质量。[DeepSeek-V3, Sections 2.1.2, 4.5.2] | 训练控制逻辑更复杂，路由实现更“系统工程化”。 |
-| GRPO + 纯 RL 起步 | 人类标注 CoT 难扩展，且会把模型绑在人类示范风格上。[DeepSeek-R1, Section 1] | reasoning 行为可在可验证任务上自发涌现。[DeepSeek-R1, Sections 2.2-2.3] | 可读性、语言混杂、reward hacking 风险需要后续阶段修正。[DeepSeek-R1, Sections 3, 6] |
+到了 `DeepSeek-R1`，重点已经不是继续改 base 架构，而是把后训练本身变成 reasoning 放大器：
 
-## 与主流方案对比
+- 先用 `R1-Zero` 验证 pure RL 是否能诱导出更强推理行为；
+- 再用 cold-start SFT、拒绝采样和第二阶段 RL，把 raw reasoning 收束成更可读、更可用的模型 [DeepSeek-R1, Sections 1-3]。
 
-| 维度 | 传统 dense Transformer / 常见 Llama 路线 | DeepSeek 路线 |
-| --- | --- | --- |
-| 基础架构倾向 | 更偏 dense-first：先做稳定的大规模 dense 训练，再通过 GQA、数据配方、工程细节逐步优化。 | 更早把 sparse FFN、KV 压缩和路由通信问题拉进主线，强调参数效率与系统协同。[DeepSeekMoE, Section 3; DeepSeek-V2, Section 2] |
-| 推理优化重点 | 常见做法是围绕 KV cache、量化、服务框架逐步增量优化。 | 直接在架构层引入 MLA，先改 attention 形态，再谈部署细节。[DeepSeek-V2, Section 2.1; DeepSeek-V3, Section 3.4] |
-| 系统观 | 系统优化通常服务于既定模型。 | 模型结构与系统实现联合设计：路由、all-to-all、pipeline、FP8 与部署策略一起定。[DeepSeek-V3, Sections 3.2-3.4] |
-| 对齐观 | 对齐常被视为 SFT/RLHF 的后续阶段。 | R1 把 RL 直接当作 reasoning 能力放大器，而非仅仅做偏好对齐。[DeepSeek-R1, Sections 1-3] |
+这条线回答的是：**当 base model 已经很强时，额外算力是不是更应该投到 reasoning 行为，而不是只投到更长预训练。**
 
-## 小结 / 启示
+### 这一整套路线带来的直接优点
 
-DeepSeek 的真正主线，可以压缩成一句话：**不是把模型先做大、再补系统，而是让模型结构、训练系统、推理系统和 RL 对齐同步演化。** 这也是为什么它看起来横跨 MoE、attention、并行训练、低精度和 reasoning，但逻辑上并不散。
+把 DeepSeek 主线压缩成结果，大概就是三件事：
 
-对工程团队来说，这条路线至少给出四个稳定结论：
+1. **单位计算更值钱**：稀疏架构和 MLA 让参数效率、KV 效率更高；
+2. **系统收益更可兑现**：V3 把通信、调度、精度和部署真正拉成一个闭环；
+3. **后训练不再只是修口风**：R1 证明 RL 可以直接成为 reasoning 的主要增长引擎。
 
-1. 先优化参数利用率，再优化推理与训练效率，最后把省下来的预算投入更强能力，是比单纯加参数更可持续的路径。[DeepSeekMoE, Section 9; DeepSeek-V3, Section 6]
-2. 架构收益如果不落到部署与通信实现上，通常兑现不成真正的产品收益；DeepSeek-V2 到 V3 的演进本质上就是在证明这一点。[DeepSeek-V2, Section 3.2.3; DeepSeek-V3, Sections 3.2-3.4]
-3. 后训练不应只被视为“口风微调”，R1 证明它可以是 reasoning 行为的主要生成机制。[DeepSeek-R1, Sections 2-3]
-4. 因此，DeepSeek 不是简单的论文串烧，而是一套持续演进的技术知识库主线，后续专题页应围绕这条主线展开，而不是各写各的局部亮点。
+## 数据怎么说明这些优点
 
-## 思考问题
+### 证据一：每一代都在解决新的主瓶颈，而不是重复加料
 
-- 如果只能保留 DeepSeek 路线中的一个创新，你会选 `DeepSeekMoE`、`MLA`、`V3 系统协同` 还是 `R1 的 RL 路线`？为什么？
-- DeepSeek 的主线更像“把算力省下来再重新分配”，而不是“持续把模型做大”。这种策略在哪些团队条件下最有效？
-- 如果你要把这套系列继续扩写，下一篇最应该补的是“统一符号页”“结构化输出/工具使用”还是“训练—部署闭环复盘”？
+从论文定位就能看出这条线的连续性：
+
+- `DeepSeekMoE` 关心 expert specialization；
+- `DeepSeek-V2` 关心 MLA 与路由约束；
+- `DeepSeek-V3` 关心超大规模系统协同；
+- `DeepSeek-R1` 关心 reasoning 行为能否被显式诱导 [DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]。
+
+这说明 DeepSeek 不是在堆平行技巧，而是在持续解决“当前最贵的问题”。
+
+### 证据二：V2 和 V3 明确把系统收益写成主结果
+
+V2 不只是提出 MLA，还明确给出 KV cache 降幅和吞吐提升；V3 也不只是给出模型规模，而是把 load balance、通信、FP8、训练成本与部署路径一起写进主文 [DeepSeek-V2, Abstract; Section 3.2.3; DeepSeek-V3, Abstract; Sections 3.2-3.4]。
+
+这说明 DeepSeek 从中期开始，就不再把系统优化当作“附录工程细节”，而是当作模型能力的一部分。
+
+### 证据三：R1 证明后训练可以成为主能力来源，而不是收尾动作
+
+R1 最重要的证据不只是最终 benchmark，而是它明确展示：
+
+- pure RL 可以诱导更长、更强的 reasoning；
+- reasoning 轨迹还可以再被收束、蒸馏、迁移到更小模型 [DeepSeek-R1, Sections 2-4]。
+
+这意味着 DeepSeek 路线里，后训练已经不只是“让回答更顺眼”，而是“继续生产能力”。
 
 ## 阅读导航
 
@@ -178,44 +111,71 @@ DeepSeek 的真正主线，可以压缩成一句话：**不是把模型先做大
 
     ---
 
-    看懂 DeepSeek 的稀疏架构主线：为什么要把专家切细、为什么 MLA 能压缩 KV cache、为什么路由与长上下文不是附属优化。
+    如果你最关心“DeepSeek 的模型到底改了什么”，先看专家怎么切细、MLA 为什么能压缩 KV、为什么路由和长上下文会一起影响系统。
 
-    [:octicons-arrow-right-24: 从 DeepSeekMoE 开始](architecture/deepseek_moe.md)
+    [:octicons-arrow-right-24: 从架构起步](architecture/deepseek_moe.md)
 
 - :material-brain: **训练与对齐**
 
     ---
 
-    聚焦预训练、GRPO、reward/verifier、RL 基础设施、distillation 与 failure modes，理解 reasoning 能力是如何被“训出来”的。
+    如果你最关心“reasoning 到底怎么被训出来”，这里会串起预训练、GRPO、reward/verifier、RL 基础设施、distillation 和 failure modes。
 
-    [:octicons-arrow-right-24: 从 RL 与 Alignment 开始](training/rl_and_alignment.md)
+    [:octicons-arrow-right-24: 从训练主线开始](training/rl_and_alignment.md)
 
 - :material-memory: **工程系统**
 
     ---
 
-    从 FP8、DualPipe、all-to-all、显存与带宽约束出发，看 DeepSeek 为什么不只是模型创新，更是系统工程创新。
+    如果你更关心 FP8、DualPipe、all-to-all、显存和带宽约束，直接从系统页切入最有效。
 
-    [:octicons-arrow-right-24: 查看系统优化专题](engineering/infra_optimization.md)
+    [:octicons-arrow-right-24: 进入系统优化专题](engineering/infra_optimization.md)
 
 - :material-chart-timeline-variant: **代际对比**
 
     ---
 
-    如果你想先抓主线，再回头看细节，这一页最适合快速建立“MoE → MLA → V3 系统协同 → R1 推理强化”的时间轴。
+    如果你只想先抓主线，不想一上来钻细节，这一页最适合快速建立“MoE → MLA → V3 系统协同 → R1 推理强化”的时间轴。
 
     [:octicons-arrow-right-24: 进入代际演进页](comparison/v1_to_v3_evolution.md)
 
 </div>
 
-### 推荐阅读路径
+## 推荐阅读路径
 
-- **先建地图**：先看 `comparison/v1_to_v3_evolution.md`，快速理解每一代到底改了什么、为什么这样改。
-- **先攻架构**：按 `architecture/deepseek_moe.md` → `architecture/mla_attention.md` → `architecture/routing_and_load_balancing.md` → `architecture/long_context_and_yarn.md`。
-- **先攻 reasoning**：按 `training/rl_and_alignment.md` → `training/reward_design_and_verifiers.md` → `training/rl_infrastructure.md` → `training/distillation_and_transfer.md`。
-- **先攻系统**：直接读 `engineering/infra_optimization.md`，再回看 `architecture/` 与 `training/` 的细节页。
+### 如果你想先建地图
 
-### 使用边界
+先看 `comparison/v1_to_v3_evolution.md`，再回来读本页导航，会更容易把每一篇放到正确位置。
 
-- 本页保留总览级分析，重点是建立专题地图。
-- 公式、实验、实现细节和 trade-off 的完整展开，放在各子页中，避免首页变成“所有内容都塞进来”的大杂烩。
+### 如果你想先看模型怎么变强
+
+按这个顺序读：
+
+- `architecture/latest_deepseek_v32_architecture.md`
+- `architecture/deepseek_moe.md`
+- `architecture/mla_attention.md`
+- `architecture/routing_and_load_balancing.md`
+- `architecture/long_context_and_yarn.md`
+
+如果你想先用一页抓住“最新版 DeepSeek 现在长什么样”，优先读 `architecture/latest_deepseek_v32_architecture.md`；如果你想把每个部件拆开学，再按后面的专题页往下读。
+
+### 如果你想先看 reasoning 怎么训出来
+
+按这个顺序读：
+
+- `training/pretraining_strategies.md`
+- `training/rl_and_alignment.md`
+- `training/reward_design_and_verifiers.md`
+- `training/rl_infrastructure.md`
+- `training/distillation_and_transfer.md`
+- `training/failure_modes_and_limitations.md`
+
+### 如果你想先看系统怎么把收益兑现
+
+直接读 `engineering/infra_optimization.md`，然后回看训练和架构页，你会更容易理解为什么 DeepSeek 一直把“模型设计”和“系统设计”绑在一起讲。
+
+## 思考问题
+
+- 如果只能保留 DeepSeek 路线中的一个环节，你会选稀疏架构、MLA、V3 系统协同，还是 R1 的 RL 路线？为什么？
+- DeepSeek 更像“先把预算省出来，再重新分配”，而不是“继续无脑堆大”。这种策略在哪类团队里最有效？
+- 如果你要继续扩写这一系列，下一篇最该补的是结构化输出/工具使用，还是训练—部署闭环复盘？

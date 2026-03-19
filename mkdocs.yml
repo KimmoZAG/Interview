@@ -228,6 +228,7 @@ nav:
   - DeepSeek:
     - 总览: model/deepseek/index.md
     - 架构专题:
+      - 最新 DeepSeek 架构（V3.2）: model/deepseek/architecture/latest_deepseek_v32_architecture.md
       - DeepSeekMoE: model/deepseek/architecture/deepseek_moe.md
       - MLA 注意力: model/deepseek/architecture/mla_attention.md
       - 路由与负载均衡: model/deepseek/architecture/routing_and_load_balancing.md

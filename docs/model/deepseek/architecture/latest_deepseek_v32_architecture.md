@@ -1,0 +1,1 @@
+--8<-- "model/deepseek/architecture/latest_deepseek_v32_architecture.md"

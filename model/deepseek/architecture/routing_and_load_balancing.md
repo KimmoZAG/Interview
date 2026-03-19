@@ -1,457 +1,130 @@
-# DeepSeek 的路由与负载均衡：从 Device-Limited Routing 到 Auxiliary-Loss-Free Balancing
+# 路由与负载均衡：为什么 MoE 的收益常常死在系统里
 
 ## 关键结论
 
-如果说 `DeepSeekMoE` 那一页回答的是“为什么要把专家切细、为什么要区分 shared experts 与 routed experts”，那么这一页回答的就是另一个同样关键的问题：**这些 routed experts 到底怎样被选中，以及为什么负载均衡不能只靠一个辅助损失草草收场。**
+MoE 真正难的地方，不是把专家数写得很大，而是让这些专家在训练和推理时**既能形成分工，又不会把通信、热点和延迟打爆**。
 
-DeepSeek 路线在这一点上的演进很有代表性：
+- DeepSeekMoE 很早就意识到，只有专家专门化还不够，还必须处理 expert-level 与 device-level 的负载均衡 [DeepSeekMoE, Section 3.3]。
+- 到 DeepSeek-V2，路由已经开始接受系统约束，不再是“从所有专家里自由 top-k”这么简单，而是引入 `device-limited routing` [DeepSeek-V2, Sections 2.2.1-2.2.3]。
+- 到 DeepSeek-V3，DeepSeek 进一步把主机制从“用 auxiliary loss 逼平衡”推进到“把平衡写进路由控制逻辑”，也就是 `auxiliary-loss-free load balancing` [DeepSeek-V3, Section 2.1.2]。
 
-- DeepSeek-V2 仍然延续了 `affinity + top-k + auxiliary losses` 的基本范式，但已经明确把系统代价纳入路由定义本身：token 不能随意打到太多设备上，因此引入 `device-limited routing` 来给 MoE 通信成本设上界 [DeepSeek-V2, Section 2.2.2]。
-- V2 同时使用三类平衡损失：`expert-level`、`device-level`、`communication-level`。这说明它不再满足于“专家别塌缩”，而是开始处理**计算负载**和**接收通信负载**的系统现实 [DeepSeek-V2, Section 2.2.3]。
-- 到 DeepSeek-V3，团队更进一步地承认：**auxiliary loss 虽然能逼出负载均衡，但也会伤害模型能力**。因此他们把“平衡压力”从损失项中部分拿掉，改成 bias-based 的 `auxiliary-loss-free load balancing`，即：用偏置项控制谁能进 top-k，但 gating value 仍由原始 affinity 决定 [DeepSeek-V3, Section 2.1.2]。
-- V3 的关键跃迁，不只是把 `device-limited` 升级成 `node-limited routing`，也不只是“减少辅助损失”，而是把负载均衡从一种“训练时惩罚模型”的思路，推进到一种“训练时控制路由系统”的思路 [DeepSeek-V3, Sections 2.1.2, 3.2.2]。
-- 更重要的是，V3 论文的消融表明：纯 auxiliary-loss-free 方法不仅更稳，还在多数 benchmark 上优于 purely auxiliary-loss-based baseline；而进一步分析表明，这种 batch-wise 更灵活的平衡方式，更有利于专家 specialization，而不是把每条序列都硬拉成平均分工 [DeepSeek-V3, Section 4.5.2; Section 4.5.3]。
+所以这一页最重要的结论是：**DeepSeek 的 MoE 之所以能继续做大，不只是因为专家设计对了，还因为路由越来越像系统设计，而不只是训练技巧。**
 
-一句话总结：**DeepSeek 的路由演进，本质上是在回答“怎样让专家既负载均衡，又保留足够强的专业分工”。**
+## 背景：为什么 MoE 最大的坑常常不是模型本身
 
-## 背景 / 问题定义
+### 旧做法为什么不够
 
-在最朴素的 MoE 叙事里，router 的任务好像很简单：
+MoE 最容易让人误会的地方，是大家常把它理解成一个“更省计算的 FFN 替代品”。但一旦模型做大，真正先爆炸的往往不是 FFN 本身，而是：
 
-1. 给每个 token 算一组 expert affinity scores；
-2. 选 top-k experts；
-3. 把 token 分给它们。
+- token 会不会疯狂挤向少数热点专家；
+- all-to-all 通信会不会成为主瓶颈；
+- 某些 device 会不会长期过载，另一些 device 却在闲着；
+- 为了追求平衡而加入的辅助损失，会不会反过来伤害模型质量。
 
-但一旦把 DeepSeek 这种细粒度专家、共享专家和 expert parallelism 带进来，问题就立刻复杂起来了。
+也就是说，**MoE 的上限常常不是由专家数量决定，而是由路由和负载均衡的系统友好程度决定。**
 
-### 第一层问题：专家可能塌缩
+### 这一页真正想解决什么
 
-如果路由完全自由学习，少数 experts 很容易被高频命中，其他 experts 得不到足够训练，最终出现 routing collapse。这是 MoE 里最经典的问题，也是早期 auxiliary loss 存在的理由 [DeepSeekMoE, Section 3.3; DeepSeek-V2, Section 2.2.3]。
+这一页主要想讲清楚四件事：
 
-### 第二层问题：即使专家不塌缩，设备也可能不均衡
+1. 为什么 DeepSeek 把路由问题一路从论文配角推成主角；
+2. DeepSeekMoE、V2、V3 在路由策略上各自解决了什么瓶颈；
+3. 为什么 auxiliary loss 到后面不再够用；
+4. 什么叫“把平衡写进路由控制逻辑”。
 
-在 expert parallel 场景里，expert 不只是逻辑概念，它们真的被部署在不同设备上。于是 load balance 就不只是“每个 expert 收多少 token”，还变成：
+## DeepSeek 具体怎么做
 
-- 哪些设备承担了更多 expert 计算；
-- 哪些设备接收了更多 all-to-all 通信；
-- 哪些 token 因为专家分布过散，导致跨设备 fan-out 过高。
+### 第一步：先承认 MoE 需要显式平衡机制
 
-这也是为什么 DeepSeek-V2 明确引入 device-level 和 communication-level 平衡损失，而不只满足于 expert-level balance [DeepSeek-V2, Section 2.2.3]。
+DeepSeekMoE 已经明确处理了两个层面的平衡问题 [DeepSeekMoE, Section 3.3]：
 
-### 第三层问题：平衡得太狠，会伤害 specialization
+- `expert-level balance`：不要让少数专家长期被选中；
+- `device-level balance`：不要让某些设备承受明显更多 token。
 
-从 V3 开始，DeepSeek 更清楚地指出：如果 auxiliary loss 太强，模型虽然更均衡了，但性能会下降 [DeepSeek-V3, Section 2.1.2]。这背后其实是在说一个更深层的矛盾：
+这一步听起来朴素，但非常关键，因为它意味着 DeepSeek 很早就接受了一个现实：**MoE 不会天然均匀，平衡必须被设计出来。**
 
-- 一方面，系统想要均匀负载；
-- 另一方面，模型想让不同 experts 真正专精于不同模式和域。
+### 第二步：V2 开始给路由加系统约束
 
-如果你要求每条序列、每个 batch、每一层都“平均地用专家”，那就很可能把本应出现的 expert specialization 拉平。
+到了 V2，DeepSeek 的问题已经不再只是“选哪些专家更准”，而是“选这些专家的代价能不能承受” [DeepSeek-V2, Sections 2.2.1-2.2.3]。
 
-因此，DeepSeek 的问题不再是“如何让路由更平均”，而是：
+于是它引入了 `device-limited routing`。直觉上，这等于给路由器加了一条硬约束：
 
-> 怎样在不牺牲 specialization 的前提下，把不均衡控制在系统可接受范围内？
+- 不是所有高分专家都能随便选；
+- 一个 token 的目标 experts 最多分布在有限数量的设备上；
+- 路由质量要和通信成本一起优化。
 
-这才是从 V2 到 V3 的核心转折点。
+这种设计的意义很直接：**MoE 路由从“只看模型分数”变成了“分数 + 系统代价”的联合问题。**
 
-## 图表清单
+### 第三步：V3 从“用 loss 逼平衡”转向“把平衡写进选择逻辑”
 
-- 图 1：路由机制总览图（Mermaid）
-- 图 2：路由与负载均衡的系统流示意（Mermaid）
-- 表 1：与 DeepSeekMoE / Switch / GShard 的对比
-- 表 2：V2 / V3 路由关键设置
+V2 仍然主要依赖辅助损失来维持平衡；但规模继续上去后，这种方法会越来越别扭：
 
-## 图表总览（重绘版，先看这块）
+- loss 太弱，热点压不住；
+- loss 太强，又可能伤害主任务质量；
+- 你是在优化一个统计趋势，而不是直接控制运行时行为。
 
-### 图 1：路由机制总览图（Mermaid）
+因此 V3 进一步走到 `auxiliary-loss-free load balancing` [DeepSeek-V3, Section 2.1.2]。
 
-```mermaid
-flowchart TD
-  A[Token u_t] --> B[Affinity Scoring]
-  B --> C{Routing}
-  C --> V2[V2: device-limited top-k]
-  C --> V3[V3: node-limited top-k + bias]
-  V2 --> L2[Aux losses: expert/device/comm]
-  V3 --> L3[Aux-loss-free bias update]
-  L2 --> D[Dispatch]
-  L3 --> D
-  D --> E[Experts Compute]
-  E --> F[Combine Output]
-```
-
-### 图 2：路由与负载均衡系统流（Mermaid）
-
-```mermaid
-flowchart LR
-  S[Router Scores] --> T[Top-k Selection]
-  T --> X[Token-to-Expert Dispatch]
-  X --> C[Cross-device/node Communication]
-  C --> P[Expert Parallel Compute]
-  P --> R[Combine]
-  R --> M[Load Stats Monitor]
-  M --> B[Bias / Balance Control]
-  B --> T
-```
-
-### 表 1：DeepSeekMoE / V2 / V3 路由策略对比（精简）
-
-| 阶段 | 路由核心 | 平衡机制 | 系统取舍 |
-| --- | --- | --- | --- |
-| DeepSeekMoE | affinity + top-k | expert/device loss | 先解决专精化 |
-| V2 | device-limited routing | expert/device/comm loss | 控通信上界 |
-| V3 | node-limited + bias routing | aux-loss-free 为主 | 减少 loss 对性能干扰 |
-
-### 表 2：V2 / V3 关键设置
-
-| 项目 | V2 | V3 |
-| --- | --- | --- |
-| 路由约束粒度 | 设备级 | 节点级 |
-| gating 分数形式 | softmax affinity | sigmoid + 归一化 |
-| 负载均衡主机制 | 辅助损失 | bias-based 控制 |
-| token dropping | 有兜底机制 | 训练/推理 no token-dropping（论文设定） |
-
-## 核心机制
-
-### 路由机制总览图
-
-```mermaid
-flowchart TD
-    A[Token hidden state u_t] --> B[Compute affinity scores]
-    B --> C{Routing stage}
-
-    C --> D1[V2: top-k under device limit]
-    C --> D2[V3: top-k under node limit + bias term]
-
-    D1 --> E1[Aux losses enforce expert/device/comm balance]
-    D2 --> E2[Bias update enforces batch-wise load balance]
-
-    E1 --> F[Dispatch to routed experts]
-    E2 --> F
-    F --> G[Expert computation]
-    G --> H[Combine + output]
-```
-
-这张图里最重要的区别有两个：
-
-- V2 主要靠 **loss** 去“逼平衡”；
-- V3 主要靠 **routing control signal** 去“调平衡”。
-
-它们都不是简单 top-k，但思想重心已经明显不同。
-
-## 数学基础
-
-### V2：亲和度、top-k 与 device-limited routing
-
-在 DeepSeek-V2 中，routed experts 的基本选择仍建立在 token-to-expert affinity 上。对于 token $u_t$，其 affinity 形式为：
+它的直觉形式可以写成：
 
 $$
-s_{i,t} = \operatorname{Softmax}_i(u_t^\top e_i)
-$$
-
-其中 $e_i$ 是第 $i$ 个 expert 的 centroid，$s_{i,t}$ 表示 token $t$ 对 expert $i$ 的亲和度 [DeepSeek-V2, Section 2.2.1]。
-
-最朴素的 gated top-k 形式可写为：
-
-$$
-g_{i,t} =
+g'_{i,t}=
 \begin{cases}
- s_{i,t}, & s_{i,t} \in \operatorname{Topk}(\{s_{j,t} \mid 1 \le j \le N_r\}, K_r) \\
+ s_{i,t}, & s_{i,t}+b_i \in \operatorname{TopK}(\{s_{j,t}+b_j\}, K_r) \\
  0, & \text{otherwise}
 \end{cases}
 $$
 
-但 V2 的关键不在这个 top-k 公式本身，而在于它增加了设备约束：
+这里：
 
-- 对每个 token，先选 affinity 最高的 $M$ 个设备；
-- 再只在这些设备上的 experts 中做 top-k [DeepSeek-V2, Section 2.2.2]。
+- $s_{i,t}$ 是 token $t$ 对 expert $i$ 的原始 affinity score；
+- $b_i$ 是动态调整的 expert bias；
+- 是否入选由 $s_{i,t}+b_i$ 决定；
+- 真正参与加权的值仍保留原始分数 $s_{i,t}$。
 
-这就是 `device-limited routing`。其系统意图非常直接：**限制 token 触达设备数，从而限制 MoE 相关通信频率与 fan-out。**
+这套机制厉害的地方在于：**你可以调节路由分布，却不必强行把主优化目标扭向“人人平均分工”。**
 
-### V2：三层辅助损失
+### 第四步：把路由做成更适合大规模系统的样子
 
-#### Expert-Level Balance Loss
+V3 的路由设计不是单独存在的，它和 node-limited routing、no token-dropping、跨节点 all-to-all 优化、冗余专家部署是一起工作的 [DeepSeek-V3, Sections 2.1.2, 3.2, 3.4]。
 
-V2 的 expert-level balance loss 为：
+也就是说，DeepSeek 后期的思路已经很清楚：
 
-$$
-\mathcal{L}_{\mathrm{ExpBal}} = \alpha_1 \sum_{i=1}^{N_r} f_i P_i
-$$
+- 路由不是训练时的小技巧；
+- 它直接决定通信扇出、热点分布和线上延迟；
+- 设计得好，MoE 才能把“总参数大、激活计算小”的优势兑现成真实系统收益。
 
-其中：
+### 这套设计带来的直接优点
 
-$$
-f_i = \frac{N_r}{K_r T} \sum_{t=1}^{T} \mathbf{1}(\text{Token } t \text{ selects Expert } i)
-$$
+把这条路由主线压缩一下，收益主要是：
 
-$$
-P_i = \frac{1}{T} \sum_{t=1}^{T} s_{i,t}
-$$
+- **热点更少**：不容易出现少数专家被挤爆；
+- **通信更可控**：token 不会被随意撒到过多设备上；
+- **模型质量更稳**：不必过度依赖会伤主任务的强辅助损失；
+- **更适合大规模训练和部署**：MoE 的理论收益更有机会落到真实系统里。
 
-[DeepSeek-V2, Section 2.2.3]
+## 数据怎么说明这些优点
 
-它的目标是防止路由塌缩，让专家至少都有机会被训练到。
+### 证据一：DeepSeekMoE 已经把 balance 问题写进核心设计
 
-#### Device-Level Balance Loss
+DeepSeekMoE 并没有把负载均衡藏到附录，而是明确讨论了 expert-level 与 device-level balance [DeepSeekMoE, Section 3.3]。
 
-当 experts 被分到不同设备后，V2 进一步定义设备级平衡：
+这说明 DeepSeek 很早就认识到：**专家是否专门化，和专家是否能被稳定调度，是同一个问题的两面。**
 
-$$
-\mathcal{L}_{\mathrm{DevBal}} = \alpha_2 \sum_{i=1}^{D} f'_i P'_i
-$$
+### 证据二：V2 把通信约束直接并入路由设计
 
-其中 $f'_i$ 与 $P'_i$ 分别聚合属于设备 $i$ 上 expert 的选择频率和亲和度 [DeepSeek-V2, Section 2.2.3]。
+V2 的 `device-limited routing` 与 communication balance loss 表明，DeepSeek 已经不满足于“路由平均一点”，而是开始给通信开销设显式上界 [DeepSeek-V2, Sections 2.2.2-2.2.3]。
 
-这个 loss 的重点不再是“专家有没有塌”，而是“设备上的计算负载是否倾斜”。
+这一步很关键，因为它意味着 MoE 的系统成本第一次被主设计正面处理，而不是留给工程同学赛后抢救。
 
-#### Communication Balance Loss
+### 证据三：V3 之所以能把 671B / 37B 激活模型训起来，路由控制是前提之一
 
-V2 甚至继续往前走了一层，显式定义 communication balance：
+V3 的主线是超大规模系统协同：aux-loss-free balancing、DualPipe、cross-node all-to-all kernels、FP8、冗余专家部署共同支撑了训练与服务闭环 [DeepSeek-V3, Sections 2.1.2, 3.2-3.4]。
 
-$$
-\mathcal{L}_{\mathrm{CommBal}} = \alpha_3 \sum_{i=1}^{D} f''_i P''_i
-$$
-
-其中：
-
-$$
-f''_i = \frac{D}{MT} \sum_{t=1}^{T} \mathbf{1}(\text{Token } t \text{ is sent to Device } i)
-$$
-
-[DeepSeek-V2, Section 2.2.3]
-
-这说明 V2 已经意识到一个非常系统化的问题：**就算发送端设备数被 device-limited routing 控住了，接收端仍可能不均衡。**
-
-### V3：Sigmoid gating 与 auxiliary-loss-free load balancing
-
-V3 的 routed expert 亲和度不再使用 softmax，而改为：
-
-$$
-s_{i,t} = \operatorname{Sigmoid}(u_t^\top e_i)
-$$
-
-然后对选中的 affinity scores 做归一化得到最终 gating values [DeepSeek-V3, Section 2.1.2]。
-
-这一步已经和 V2 有差别，但更关键的是 bias-based routing：
-
-$$
-g'_{i,t} =
-\begin{cases}
- s_{i,t}, & s_{i,t} + b_i \in \operatorname{Topk}(\{s_{j,t} + b_j \mid 1 \le j \le N_r\}, K_r) \\
- 0, & \text{otherwise}
-\end{cases}
-$$
-
-其中：
-
-- $b_i$ 是 expert $i$ 的 bias term；
-- bias **只用于决定谁进 top-k**；
-- 最终与 FFN 输出相乘的 gating value 仍来自原始 affinity $s_{i,t}$ [DeepSeek-V3, Section 2.1.2]。
-
-这点非常重要，因为它保住了两件事：
-
-1. balance control 不直接扭曲原始门控值；
-2. 平衡压力主要体现在“进入候选集合”的排序层，而不是“输出加权”的数值层。
-
-### Bias update 机制
-
-V3 在每个 training step 结束后监控整批 expert load：
-
-- 若某 expert 过载，则其 bias 减少 $\gamma$；
-- 若某 expert 欠载，则其 bias 增加 $\gamma$ [DeepSeek-V3, Section 2.1.2]。
-
-也就是说，负载均衡被转化成一个在线控制过程，而不是一个额外损失项牵着主目标一起优化。
-
-### 补充的 sequence-wise auxiliary loss
-
-虽然 V3 主打 auxiliary-loss-free，但它没有完全丢掉 auxiliary signal，而是保留了一个极小系数的 sequence-wise balance loss：
-
-$$
-\mathcal{L}_{\mathrm{Bal}} = \alpha \sum_{i=1}^{N_r} f_i P_i
-$$
-
-其中 $\alpha$ 被设为极小值 [DeepSeek-V3, Section 2.1.2]。这说明 DeepSeek 的策略并不是“彻底不要 auxiliary loss”，而是：
-
-- 主负载均衡机制靠 bias-based routing；
-- 仅保留一个很轻的序列级兜底项，防止单序列极端失衡。
-
-### Node-limited routing 与 no token-dropping
-
-V3 把 V2 的 `device-limited routing` 进一步提升为 `node-limited routing`：
-
-- 每个 token 最多只发往 $M$ 个节点；
-- 这些节点由节点内 expert affinity 的聚合得分决定 [DeepSeek-V3, Section 2.1.2; Section 3.2.2]。
-
-同时，由于其负载均衡足够有效，V3 在训练与推理中都 **不 drop tokens** [DeepSeek-V3, Section 2.1.2]。
-
-这和 V2 形成鲜明对比：
-
-- V2 需要 device-level token dropping 作为工程兜底 [DeepSeek-V2, Section 2.2.4]；
-- V3 则通过更强的 routing control，把 token dropping 从主路径拿掉。
-
-## 工程实现
-
-### 从 V2 到 V3：路由思想真正变了什么
-
-### V2：先把通信上界关进笼子
-
-V2 的路由思想可以概括为：
-
-1. 先承认 fine-grained experts 会放大通信成本；
-2. 用 `device-limited routing` 给通信 fan-out 加边界；
-3. 用三层 auxiliary losses 同时处理 expert、device 和 communication imbalance；
-4. 如果还是不稳，就用 token dropping 兜底 [DeepSeek-V2, Sections 2.2.2-2.2.4]。
-
-这是一种非常典型的“系统约束前移”做法：模型可以自由路由，但自由度必须放在工程预算之内。
-
-### V3：从“逼均衡”转向“控均衡”
-
-V3 则更进一步：它意识到强 auxiliary loss 虽然能让负载均衡，但可能直接伤害 model performance [DeepSeek-V3, Section 2.1.2]。因此它选择把平衡压力改成 bias-based control。
-
-这带来的根本变化是：
-
-- V2 更像在训练目标里加惩罚项；
-- V3 更像在路由系统里加反馈控制器。
-
-这是一个非常大的思想转弯，因为它把平衡问题从“损失函数设计”推进到了“在线调度控制设计”。
-
-### 路由与负载均衡的系统流示意
-
-```mermaid
-flowchart LR
-    A[Token u_t] --> B[Compute affinity to routed experts]
-    B --> C[V2: filter by top-M devices]
-    B --> D[V3: adjust ranking with expert bias b_i]
-    C --> E[V2 top-k experts]
-    D --> F[V3 top-k experts]
-    E --> G[V2 aux losses on expert/device/comm]
-    F --> H[V3 batch-wise load monitor + bias update]
-    G --> I[Dispatch / all-to-all]
-    H --> I
-    I --> J[Expert FFN compute]
-    J --> K[Combine + output]
-```
-
-这张图里，V2 和 V3 的真正差别不在“有没有 top-k”，而在于 top-k 前后的控制点：
-
-- V2：top-k 基本不变，主要在后面用 losses 纠偏；
-- V3：top-k 的排序本身就被 bias 重写，并在 step 级别动态调整。
-
-### Ablation：为什么 V3 认为 auxiliary-loss-free 更值得
-
-### 表现对比
-
-V3 的 `Table 5` 给出了 small / large 两档模型的 ablation：在多数 benchmark 上，auxiliary-loss-free 都优于 purely auxiliary-loss-based baseline [DeepSeek-V3, Section 4.5.2]。
-
-一个典型信号是：
-
-- 小模型下，Pile-test BPB、BBH、MMLU、DROP、GSM8K 等多项都更好；
-- 大模型下，HumanEval、MBPP、GSM8K、MATH 等 reasoning / code benchmarks 上提升更明显 [DeepSeek-V3, Section 4.5.2]。
-
-这说明 V3 并不是为了系统好看才换平衡机制，而是在实际模型质量上也拿到了收益。
-
-### 为什么它更有利于 expert specialization
-
-V3 的 `Section 4.5.3` 和 Figure 9 给出了一个很有意思的解释：
-
-- sequence-wise auxiliary loss 会把每条序列都强行拉向均匀负载；
-- batch-wise auxiliary-loss-free（以及 batch-wise auxiliary loss）更灵活，不要求每个 sequence 内都平；
-- 这种灵活性允许 experts 对不同 domain 形成更清晰的 specialization [DeepSeek-V3, Section 4.5.3]。
-
-换句话说，V3 认为：
-
-> 专家专精本身就意味着“某些序列更偏向某些 experts”。
-
-如果你对每条序列都要求平衡，就会压制这种专精。
-
-这也是为什么他们观察到 auxiliary-loss-free model 在不同域上表现出更强的 expert specialization patterns [DeepSeek-V3, Section 4.5.3]。
-
-## 与主流方案对比
-
-| 方案 | 路由控制核心 | 负载均衡核心 | 优点 | 代价 |
-| --- | --- | --- | --- | --- |
-| DeepSeekMoE | fine-grained experts + shared experts | expert / device auxiliary losses | 先把 specialization 问题做出来 | 仍偏辅助损失式 balance [DeepSeekMoE, Section 3.3] |
-| DeepSeek-V2 | device-limited routing | expert + device + communication losses + token dropping | 显式把通信成本纳入路由设计 | auxiliary losses 多，训练与工程都更重 [DeepSeek-V2, Sections 2.2.2-2.2.4] |
-| DeepSeek-V3 | node-limited routing + bias-based top-k | auxiliary-loss-free主导 + 极小 sequence loss | 平衡与 specialization trade-off 更好，且 no token dropping | 控制逻辑更复杂 [DeepSeek-V3, Section 2.1.2] |
-| Switch / GShard | top-1 / top-2 coarse routing | auxiliary loss | 方案更经典，工程实现较成熟 | 对细粒度 specialization 和系统级通信控制不够精细 |
-
-如果用一句话概括：
-
-- DeepSeekMoE 先解决“专家怎么切”；
-- V2 再解决“专家怎么分配且不把通信拖爆”；
-- V3 则解决“怎么平衡这些专家而不把模型能力压坏”。
-
-## 实现细节补充
-
-### V2 关键设置
-
-从论文里可以确认的 V2 路由相关设置包括：
-
-- 每层 routed experts 分布在 `8` 个设备上；
-- 每个 token 最多发往 `3` 个设备，即 $M = 3$；
-- balance factors：
-  - $\alpha_1 = 0.003$
-  - $\alpha_2 = 0.05$
-  - $\alpha_3 = 0.02$
-- 训练时使用 token-dropping，评估时不 drop [DeepSeek-V2, Section 3.1.2]。
-
-这些超参数清楚说明：V2 的主策略仍然是“多重 balance losses + 工程兜底”。
-
-### V3 关键设置
-
-V3 路由相关可确认设置包括：
-
-- node-limited routing：每 token 最多发往 `4` 个节点；
-- auxiliary-loss-free bias update speed：前 `14.3T` tokens 使用 $\gamma = 0.001$；
-- 训练与推理均 no token dropping [DeepSeek-V3, Section 2.1.2; Section 4.2]。
-
-而在部署中，V3 还进一步通过 redundant experts 来平衡高负载 experts，并按节点内 GPU 重新编排 experts [DeepSeek-V3, Section 3.4.1]。这说明 route-time balance 和 serve-time balance 也是分层处理的，不会靠同一个机制包打天下。
-
-## Design trade-offs
-
-### 为什么 DeepSeek 不满足于“把 auxiliary loss 调小一点”
-
-直觉上，好像只要把 auxiliary loss 调轻，既能保持平衡，又不至于伤性能。但 V3 的思路比这更激进：他们认为 **balance pressure 应该换一种注入方式**，而不是只是换个权重。
-
-原因在于：
-
-1. auxiliary loss 本质上仍在优化主目标；
-2. 权重大了伤性能，权重小了又未必够平衡；
-3. 更重要的是，它不区分“哪个环节该被控制”：是排序逻辑，还是输出加权，还是单序列极端失衡。
-
-于是 V3 才把：
-
-- “谁能进 top-k” 交给 bias control；
-- “输出权重多大” 保留给原始 affinity；
-- “单序列极端失衡” 交给一个很轻的 sequence-wise auxiliary loss。
-
-这是一次更精细的职能拆分。
-
-### DeepSeek 路由演进的真实代价
-
-虽然 V3 路由更漂亮，但代价也不小：
-
-- 实现逻辑更复杂；
-- 需要 step 级全局监控 expert load；
-- 需要在训练框架里维护 bias update；
-- 还要让路由控制与 node-limited dispatch、no token-dropping、serve-time redundant experts 一起协同工作。
-
-也就是说，V3 不是“更简单的负载均衡”，而是“更复杂但更划算的负载均衡”。
-
-## 小结 / 启示
-
-DeepSeek 的路由与负载均衡演进，可以压成一句话：
-
-> 它从“怎样避免专家塌缩”，逐步演进到了“怎样在系统可承受的约束下，让专家真正专精起来”。
-
-因此，这条路线最值得记住的不是某个单独公式，而是下面这组演进关系：
-
-- `DeepSeekMoE`：先重新定义专家粒度与 shared/routed 分工；
-- `DeepSeek-V2`：再把通信约束和三层 balance loss 写进路由机制；
-- `DeepSeek-V3`：最后把负载均衡从辅助损失推进到 bias-based routing control，并配上 node-limited routing 与 no token-dropping。
-
-如果说 `deepseek_moe.md` 讲的是“专家为什么值得被切细”，那么这一页讲的就是另一半真相：**专家切细之后，只有路由和负载均衡也跟着升级，这套 MoE 才真的能在大系统里跑得起来，而且跑得值得。**
+虽然这不是单靠路由一项完成的，但恰恰说明了一件事：**没有系统友好的路由，后面的那些工程优化很难全部接得上。**
 
 ## 思考问题
 
-- 在 V2 和 V3 之间，你更认可“用 auxiliary loss 逼平衡”还是“用 bias 控制路由”这条思路？为什么？
-- 如果你的集群拓扑经常变化，device-limited 或 node-limited routing 的约束应该如何重写？
-- expert specialization 与负载均衡天然存在张力。对你自己的系统来说，哪一侧更值得优先保？
+- 你觉得 MoE 更容易先死在哪一步：专家学不专，还是专家分得太散导致通信爆炸？为什么？
+- `auxiliary-loss-free` 的核心价值，更像“保模型质量”，还是“保系统可控性”？
+- 如果你只能在路由里保留一个约束，你会优先保 `expert balance`、`device balance`，还是 `node-limited routing`？
