@@ -189,6 +189,30 @@
          <lastmod>2026-03-19</lastmod>
     </url>
     <url>
+         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/00-index/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/01-architecture-overview/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/02-model-loading/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/03-model-registry/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/04-custom-ops-and-operator-replacement/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/ai-infra/06-vllm/05-inference-acceleration/</loc>
+         <lastmod>2026-03-19</lastmod>
+    </url>
+    <url>
          <loc>https://kimmozag.github.io/Interview/c%2B%2B/</loc>
          <lastmod>2026-03-19</lastmod>
     </url>
