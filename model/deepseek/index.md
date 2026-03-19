@@ -15,16 +15,14 @@
 
 ## 图表清单
 
-- 图 1：DeepSeek 三条主线演进路线图（Mermaid）
-- 表 1：DeepSeek 系列时间线
-- 表 2：三条主线如何贯穿各代模型
-- 表 3：各论文的核心创新、目标问题、收益与代价
-- 表 4：工程实现重点总览
-- 表 5：与 Llama / GPT / 传统 Transformer 路线对比
+DeepSeek 的主线不该被理解成“先做 MoE，再做 MLA，再做 RL”的论文串联；更准确的理解是：**它一直在同一个预算约束下，持续重分配算力，把参数效率、推理效率、系统可扩展性和 reasoning 能力一起往上推。**[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
 
-## 使用说明
+- **DeepSeekMoE**：先解决“更多参数是否真的变成更高有效容量”。
+- **DeepSeek-V2**：再解决“即使 MoE 可训，可否把 KV cache 与通信成本也一起压下来”。
+- **DeepSeek-V3**：继续解决“超大 MoE 的训练、通信、负载均衡和部署是否还能同时成立”。
+- **DeepSeek-R1**：最后把节省下来的预算继续投向 reasoning 行为本身，而不是只投向更长预训练。
 
-- 如果你第一次读 DeepSeek，优先看 `comparison/v1_to_v3_evolution.md`，先建立“为什么每一代都在改不同瓶颈”的主线。
+本页的作用不是复述论文，而是先给出一张稳定地图，帮助读者进入后续专题页时不迷路。
 - 如果你读到跨页重复的公式，请把专题页当作主定义页：`architecture/mla_attention.md` 负责 MLA，`training/rl_and_alignment.md` 负责 GRPO，`training/reward_design_and_verifiers.md` 负责奖励与 verifier。
 - 如果你只想抓住工程落地顺序，可以按“架构 → 路由/长上下文 → 训练与对齐 → 工程系统”来读，而不是在每页里来回跳。
 

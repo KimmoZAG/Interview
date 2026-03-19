@@ -2,9 +2,14 @@
 
 ## 关键结论
 
-DeepSeek 的系统效率优势，不是来自某个单点技巧，而是来自一次彻底的架构—训练—通信—硬件协同设计。MLA 先把注意力的缓存压力降下来，MoE 再把参数规模和每 token 计算解耦，FP8 mixed precision 把算力与显存效率继续往上推，而 DualPipe、受限路由、跨节点 all-to-all 内核和内存优化，则把原本会压垮训练吞吐的通信成本尽可能隐藏在计算后面 [DeepSeek-V2, Section 3.1.3; DeepSeek-V3, Section 3.2; DeepSeek-V3, Section 3.3]。
+DeepSeek 的系统效率优势，不是来自某个单点技巧，而是来自一套完整的**架构—训练—通信—硬件协同设计**。[DeepSeek-V2, Section 3.1.3; DeepSeek-V3, Sections 3.2-3.3]
 
-从系统视角看，DeepSeek 真正稀缺的地方不只是“提出了 MLA 和 MoE”，而是把这两类架构做成了可以稳定训练、跨节点扩展、并且高吞吐部署的工程系统。论文给出的训练成本、吞吐和稳定性指标都指向同一个结论：工程优化本身就是 DeepSeek 的核心竞争力之一 [DeepSeek-V2, Section 3.2.3; DeepSeek-V3, Abstract; DeepSeek-V3, Table 1]。
+- **MLA** 先把 attention 的缓存压力降下来。
+- **MoE** 再把总参数规模与每 token 计算解耦。
+- **FP8** 继续压低算力、显存和通信字节成本。
+- **DualPipe、受限路由与拓扑感知 all-to-all** 则尽量把通信隐藏到计算后面。
+
+从系统视角看，DeepSeek 稀缺的地方不只是“提出了 MLA 和 MoE”，而是把这些结构真正做成了可稳定训练、可跨节点扩展、也可高吞吐部署的工程系统。[DeepSeek-V2, Section 3.2.3; DeepSeek-V3, Abstract; Table 1]
 
 ## 本页在系列中的位置
 

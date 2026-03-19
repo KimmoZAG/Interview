@@ -2,17 +2,12 @@
 
 ## 关键结论
 
-DeepSeek-R1 的一个非常重要但容易被主线叙事遮住的贡献，是它不只证明了 **大模型可以通过 RL 学会更强 reasoning**，还进一步证明了：这些涌现出的推理行为，**可以被蒸馏到更小的开源基座上**，从而把“昂贵的 reasoning 训练”转化成“更便宜的 reasoning 能力分发” [DeepSeek-R1, Abstract; Section 1; Section 4; Section 6]。
+R1 的 distillation 回答的是一个非常现实的问题：**当大模型已经通过 RL 学会更强 reasoning 之后，这种能力能不能被迁移成更小、更廉价、更易部署的模型资产。**[DeepSeek-R1, Abstract; Sections 1,4,6]
 
-如果说 R1-Zero / R1 回答的是“reasoning 能不能被强化学习诱导出来”，那么 distillation 回答的就是另一个更现实的问题：**这种能力能不能脱离 600B 级大基座，变成更小、更廉价、更易部署的模型资产**。
-
-先给出这页的核心结论：
-
-- DeepSeek 把 reasoning distillation 看成整个 R1 路线的自然收束：先让大模型通过 RL 长出更长、更强的思维链，再把这些 reasoning traces 与筛选后的监督样本蒸馏给更小模型 [DeepSeek-R1, Section 1; Appendix A.2; Appendix B.3.3]。
-- 这种蒸馏不是“复制一个最终答案”，而是复制 **reasoning style、problem decomposition、reflection / verification 行为，以及面向用户的最终表达方式**。因此，distillation 的训练对象并不是一组短标签，而是带有思维链和答案结构的长轨迹监督 [DeepSeek-R1, Appendix B.3.2; Appendix B.3.3]。
-- DeepSeek 明确给出了蒸馏模型谱系：Qwen 系列从 `1.5B / 7B / 14B / 32B`，Llama 系列覆盖 `8B / 70B`。这意味着他们并不是只做“一个 showcase 小模型”，而是在刻意验证 reasoning transfer 是否能跨不同参数规模和不同 base family 成立 [DeepSeek-R1, Appendix B.4.3]。
-- 从论文叙述来看，DeepSeek 的关键判断是：**reasoning 并不一定要在每个小模型上重新用大规模 RL 学一遍**。只要大模型已经通过 RL 探索出高质量 reasoning 轨迹，那么 distillation 往往是更经济、更稳定、更可推广的路径 [DeepSeek-R1, Section 1; Section 6]。
-- 换句话说，R1 的 distillation 不是附属功能，而是把“昂贵的探索”与“便宜的复制”分离开来的核心机制。大模型负责花钱找路，小模型负责把路走熟。
+- **路线定位**：先让大模型通过 RL 找到更强推理轨迹，再把这些轨迹整理成监督样本蒸馏给更小模型。[DeepSeek-R1, Section 1; Appendix B.3.3]
+- **蒸馏对象不是短答案**：真正被迁移的是 reasoning style、problem decomposition、reflection / verification 行为，以及面向用户的最终表达方式。[DeepSeek-R1, Appendix B.3.2; Appendix B.3.3]
+- **不是单点展示**：论文明确覆盖了多档 Qwen 与 Llama distilled models，说明 DeepSeek 在验证 reasoning transfer 是否能跨参数规模和 base family 成立。[DeepSeek-R1, Appendix B.4.3]
+- **经济学意义很强**：reasoning 不必在每个小模型上重新用大规模 RL 学一遍。大模型负责昂贵探索，小模型负责廉价继承。[DeepSeek-R1, Section 6]
 
 ## 本页在系列中的位置
 

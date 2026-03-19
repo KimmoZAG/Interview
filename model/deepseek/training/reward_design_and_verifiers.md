@@ -2,14 +2,12 @@
 
 ## 关键结论
 
-DeepSeek-R1 训练体系里，真正决定 RL 能不能工作下去的，不只是 `GRPO` 这种优化算法，而是 **奖励是否可靠、verifier 是否可扩展、以及 rollout / scoring / training 这条链能否高吞吐闭环**。如果把 `RL and Alignment` 页面理解为“为什么要用 RL、整体管线怎么走”，那么这一页更关注另一个问题：**奖励信号是怎么被制造、过滤、调度并喂回优化器的**。
+在 DeepSeek-R1 里，真正决定 RL 能不能长期工作下去的，不只是 `GRPO`，而是：**奖励是否可靠、verifier 是否可扩展，以及 rollout / scoring / training 这条链能不能闭环跑顺。**
 
-可以先给出四个结论：
-
-- 对 R1-Zero 而言，最关键的设计不是“复杂 reward model”，而是 **rule-based reward + 可验证任务**。DeepSeek 明确优先选择数学、代码、逻辑这类能给出硬反馈的任务，而不是一开始就把推理训练建立在神经奖励模型上 [DeepSeek-R1, Section 2.2]。
-- DeepSeek 把奖励分成两类：**reasoning reward** 与 **general preference reward**。前者服务“答案是否真对”，后者服务“回答是否更像人类想要的样子”；这两类信号不会在训练一开始就完全混用，而是分阶段引入 [DeepSeek-R1, Section 3.2.2]。
-- Reward 设计不是纯算法问题，而是系统问题。论文专门把 RL pipeline 拆成 `Rollout / Inference / Rule-based Reward / Training` 四个模块，并通过异步调度、vLLM workers、VRAM offload 和数据打包，把奖励计算的长尾延迟隐藏掉 [DeepSeek-R1, Appendix B.1]。
-- DeepSeek 非常清楚 reward hacking 的风险边界：**可验证规则奖励相对稳，model-based preference reward 更脆弱**。这也是为什么 general preference reward 只在第二阶段 RL 的最后 400 steps 才被引入 [DeepSeek-R1, Section 3.2.2; Appendix B.5]。
+- **R1-Zero 的第一原则**：先用 `rule-based reward + verifier-rich task` 把 reasoning 放大，而不是一开始就押注复杂 reward model。[DeepSeek-R1, Section 2.2]
+- **奖励分层引入**：`reasoning reward` 负责“答案对不对”，`general preference reward` 负责“回答像不像用户想要的样子”，两者不会在训练一开始就完全混用。[DeepSeek-R1, Section 3.2.2]
+- **奖励本身是系统问题**：reward pipeline 必须和 rollout、inference、training 一起看，因为 verifier 的长尾延迟会直接决定 RL 吞吐。[DeepSeek-R1, Appendix B.1]
+- **风险边界很明确**：可验证规则奖励相对稳，model-based preference reward 更容易被 exploit，所以后者只在第二阶段 RL 的最后 400 steps 才少量引入。[DeepSeek-R1, Section 3.2.2; Appendix B.5]
 
 ## 本页在系列中的位置
 

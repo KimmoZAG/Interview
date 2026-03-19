@@ -2,14 +2,14 @@
 
 ## 关键结论
 
-DeepSeek-R1 的突破，不在于发明了一种全新的 Transformer 结构，而在于把 **reinforcement learning 从“对齐收尾步骤”抬升为“推理能力放大器”**。整条路线可以概括为：
+DeepSeek-R1 的真正突破，不在于换了一套 Transformer 结构，而在于把 **reinforcement learning 从“对齐收尾步骤”提升为“推理能力放大器”**。
 
-- 先用 DeepSeek-V3-Base 这样的强预训练底座提供知识、语言能力与初始推理潜力；
-- 再用 **pure RL** 验证：即使不依赖人工标注的 reasoning traces，模型也能在合适奖励下自发演化出更长、更有反思性的推理行为 [DeepSeek-R1, Section 1; Section 2.3]；
-- 随后用 cold-start SFT、rejection sampling、二次 RL，把这种 raw reasoning 能力转化为更可读、更稳定、更符合用户偏好的可交付模型 [DeepSeek-R1, Section 3]；
-- 在算法层面，DeepSeek 用 **GRPO** 替代标准 PPO，不是为了“换个名字”，而是因为长链式推理场景下，value model 既昂贵又难学，而基于 group-relative advantage 的优化更适合有 verifier 的推理任务 [DeepSeek-R1, Section 2.1; Appendix A.3]。
+- **先有强底座**：DeepSeek-V3-Base 提供知识、语言能力和初始推理潜力。
+- **再做 pure RL 验证**：即使没有人工标注 reasoning traces，模型也能在合适奖励下长出更长、更有反思性的推理行为。[DeepSeek-R1, Sections 1, 2.3]
+- **然后补可读性与可交付性**：用 cold-start SFT、rejection sampling 和第二阶段 RL，把 raw reasoning 收敛成更稳定、更符合用户偏好的模型。[DeepSeek-R1, Section 3]
+- **算法上选 GRPO**：不是为了“换个名字”，而是因为长链推理场景下，value model 昂贵且难学，group-relative advantage 更适合 verifier-rich 任务。[DeepSeek-R1, Section 2.1; Appendix A.3]
 
-因此，R1 最重要的启示不是“RL 很强”，而是：**当 base model 足够强、奖励足够可靠、系统足够稳定时，RL 可以把推理从一种静态模仿能力，变成一种可持续放大的行为能力。**
+所以，R1 最重要的启示不是“RL 很强”，而是：**当 base model 足够强、奖励足够可靠、系统足够稳定时，RL 可以把推理从静态模仿能力，变成可持续放大的行为能力。**
 
 ## 本页在系列中的位置
 

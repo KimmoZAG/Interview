@@ -48,9 +48,12 @@ flowchart LR
 
 ## 关键结论
 
-- DeepSeek 的演进主线不是单一维度的 scaling，而是 **架构稀疏化 → KV 压缩 → 系统协同 → RL reasoning** 的连续推进。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
-- DeepSeekMoE 解决的是“MoE 够不够专精”；V2 解决的是“MoE 能不能高效推理”；V3 解决的是“超大 MoE 能不能稳定扩展”；R1 解决的是“这些能力如何转化为更强 reasoning”。[DeepSeekMoE, Section 3; DeepSeek-V2, Sections 2-3; DeepSeek-V3, Sections 2-3; DeepSeek-R1, Sections 2-3]
-- 因此，DeepSeek 的系统优势来自协同优化：如果只保留其中一个部件，例如只上 MoE 不控通信，或只做 RL 不解决基座可训练性，都拿不到论文展示的那组结果。[DeepSeek-V2, Sections 2.2.2-2.2.3; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Section 6]
+- DeepSeek 的主线不是单一维度的 scaling，而是 **架构稀疏化 → KV 压缩 → 系统协同 → RL reasoning** 的连续推进。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
+- **DeepSeekMoE** 先解决“MoE 是否真的带来更高有效容量”。
+- **DeepSeek-V2** 再解决“MoE 能不能同时高效训练和高效推理”。
+- **DeepSeek-V3** 继续解决“超大 MoE 的训练、通信与部署是否还能一起成立”。
+- **DeepSeek-R1** 最后把这些节省下来的预算进一步转化成更强 reasoning 行为。
+- 因此，DeepSeek 的竞争力来自协同优化：只保留其中一个部件，通常拿不到论文展示的那组结果。[DeepSeek-V2, Sections 2.2.2-2.2.3; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Section 6]
 
 ## 本页在系列中的位置
 

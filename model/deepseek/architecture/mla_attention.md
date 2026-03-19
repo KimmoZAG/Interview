@@ -2,14 +2,13 @@
 
 ## 关键结论
 
-Multi-head Latent Attention, 简称 MLA，本质上不是“把多头注意力改成共享 KV”这么简单，而是把每个 token 需要长期缓存的状态，从按 head 展开的完整 $K/V$ 张量，改成一个低秩 latent code $c_t^{KV}$，再配一个专门承载位置编码的共享 key $k_t^R$。这样，DeepSeek 把推理瓶颈从“缓存大量已展开的 head-specific KV”改成“缓存更小的可重建状态”，从而同时压缩显存占用和解码带宽压力 [DeepSeek-V2, Section 2.1; DeepSeek-V3, Section 2.1.1]。
+MLA 的核心不是“共享 KV”，而是**把每个 token 需要长期缓存的状态改写成更小的 latent 表示**，再在需要时恢复出参与注意力计算的内容路径。[DeepSeek-V2, Section 2.1; DeepSeek-V3, Section 2.1.1]
 
-对 DeepSeek 而言，MLA 是一根真正的系统杠杆：
-
-- 它保留了比 MQA/GQA 更强的表达空间，因为每个 head 仍然可以通过上投影得到自己的 $K/V$ 子空间，而不是被迫共享同一组完整 KV [DeepSeek-V2, Section 2.1.2; DeepSeek-V2, Appendix D.1]。
-- 它显著压缩了推理期 KV cache，论文给出的 matched comparison 中，小型 MoE 配置的 MLA 只需 MHA 的 14% KV cache，大型 MoE 配置只需 4% [DeepSeek-V2, Appendix D.2]。
-- 它并不改变 attention 对历史 token 的访问模式：长上下文预填充依然有 $O(T^2)$ 的 token-token 交互，增益主要来自状态维度变小，而不是把注意力本身“变成线性”了。这一点很关键，别被“latent”两个字带偏了。
-- 为了让低秩 KV 压缩与 RoPE 共存，DeepSeek 额外引入了 decoupled RoPE，把位置相关部分从可压缩内容子空间里拆出来，这是 MLA 真正成立的关键补丁 [DeepSeek-V2, Section 2.1.3]。
+- **系统价值**：把推理瓶颈从“缓存完整多头 KV”改成“缓存更小的可重建状态”，直接降低显存占用和解码带宽压力。
+- **能力取舍更优**：相比 MQA/GQA，MLA 仍保留 head-specific 的内容子空间，而不是把所有头的 KV 完全绑死在一起。[DeepSeek-V2, Section 2.1.2; Appendix D.1]
+- **缓存收益很大**：在 V2 的 matched comparison 中，小型 MoE 配置下 MLA 的 KV cache 仅为 MHA 的 14%，大型配置可降到 4%。[DeepSeek-V2, Appendix D.2]
+- **别误会复杂度**：MLA 没把 attention 变成线性，prefill 仍然有 $O(T^2)$ 的 token-token 交互，主要收益来自状态维度缩小。
+- **成立前提**：`decoupled RoPE` 不是边角补丁，而是 MLA 能同时兼顾低秩压缩与推理实现优化的关键条件。[DeepSeek-V2, Section 2.1.3]
 
 ## 本页在系列中的位置
 
