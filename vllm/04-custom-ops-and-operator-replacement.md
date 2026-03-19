@@ -198,11 +198,11 @@ ops.rms_norm(out, hidden_states, weight, epsilon)
 
 ## 关联知识网络
 
-**前置**：[模型加载机制](02-model-loading.md)、[FlashAttention IO-aware](../01-operator-optimization/06-flashattention-io-aware.md)、[量化 Basics](../01-operator-optimization/05-quantization-basics.md)
+**前置**：[模型加载机制](02-model-loading.md)、[FlashAttention IO-aware](../ai-infra/01-operator-optimization/06-flashattention-io-aware.md)、[量化 Basics](../ai-infra/01-operator-optimization/05-quantization-basics.md)
 
 **平行**：[多模型支持与注册](03-model-registry.md)
 
-**延伸**：[推理加速技术](05-inference-acceleration.md)、[kernel 执行模型](../01-operator-optimization/02-kernel-execution-model.md)
+**延伸**：[推理加速技术](05-inference-acceleration.md)、[kernel 执行模型](../ai-infra/01-operator-optimization/02-kernel-execution-model.md)
 
 ---
 

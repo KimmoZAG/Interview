@@ -173,7 +173,6 @@ nav:
       - 可观测性与调试: ai-infra/02-inference-engine/06-observability-and-debugging.md
       - Paged KV 与 Allocator: ai-infra/02-inference-engine/07-paged-kv-and-allocator.md
       - 长上下文推理: ai-infra/02-inference-engine/08-long-context-serving.md
-      - 赤兔推理引擎面试笔记: ai-infra/02-inference-engine/09-chitu-inference-engine.md
     - LLM 架构:
       - ai-infra/03-llm-architecture/00-index.md
       - Transformer 最小知识: ai-infra/03-llm-architecture/01-transformer-minimum.md
@@ -190,13 +189,6 @@ nav:
       - 互联与拓扑: ai-infra/04-communication/03-interconnects-and-topology.md
       - 集合通信原语: ai-infra/04-communication/04-collectives.md
       - 并行到通信映射: ai-infra/04-communication/05-parallelism-to-communication.md
-    - vLLM 深度解析:
-      - 系列导读: ai-infra/06-vllm/00-index.md
-      - 架构总览: ai-infra/06-vllm/01-architecture-overview.md
-      - 模型加载机制: ai-infra/06-vllm/02-model-loading.md
-      - 多模型支持与注册: ai-infra/06-vllm/03-model-registry.md
-      - 算子替换与定制: ai-infra/06-vllm/04-custom-ops-and-operator-replacement.md
-      - 推理加速技术: ai-infra/06-vllm/05-inference-acceleration.md
     - 附录:
       - ai-infra/05-appendix/00-index.md
       - 术语表: ai-infra/05-appendix/glossary.md
@@ -210,6 +202,18 @@ nav:
       - CS336 资源导读: ai-infra/05-appendix/cs336-from-scratch-resource-map.md
       - CS336 逐讲映射: ai-infra/05-appendix/cs336-lecture-to-ai-infra-map.md
       - 参考资料: ai-infra/05-appendix/references.md
+
+  - vLLM:
+    - 系列导读: vllm/00-index.md
+    - 架构总览: vllm/01-architecture-overview.md
+    - 模型加载机制: vllm/02-model-loading.md
+    - 多模型支持与注册: vllm/03-model-registry.md
+    - 算子替换与定制: vllm/04-custom-ops-and-operator-replacement.md
+    - 推理加速技术: vllm/05-inference-acceleration.md
+
+  - Chitu:
+    - 系列导读: chitu/00-index.md
+    - 赤兔推理引擎面试笔记: chitu/09-chitu-inference-engine.md
 
   - C++:
     - c++/00-index.md

@@ -78,11 +78,11 @@
 
 ## 关联知识网络
 
-**前置**：[LLM Serving](../02-inference-engine/04-llm-serving.md)、[Paged KV & Allocator](../02-inference-engine/07-paged-kv-and-allocator.md)
+**前置**：[LLM Serving](../ai-infra/02-inference-engine/04-llm-serving.md)、[Paged KV & Allocator](../ai-infra/02-inference-engine/07-paged-kv-and-allocator.md)
 
 **平行**：[vLLM 模型加载](02-model-loading.md)、[vLLM 算子替换](04-custom-ops-and-operator-replacement.md)
 
-**延伸**：[vLLM 推理加速](05-inference-acceleration.md)、[训练并行](../04-communication/01-training-parallelism.md)
+**延伸**：[vLLM 推理加速](05-inference-acceleration.md)、[训练并行](../ai-infra/04-communication/01-training-parallelism.md)
 
 ---
 

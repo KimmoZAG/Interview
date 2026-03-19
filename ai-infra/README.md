@@ -4,7 +4,7 @@
 
 ## 新组织方式（主线）
 
-本目录已开始从旧的 `operators / models / inference / appendix` 四类结构，重构为更适合学习、复习与面试的五大板块：
+本目录已开始从旧的 `operators / models / inference / appendix` 四类结构，重构为更适合学习、复习与面试的五大主线：
 
 1. **算子优化**：单个算子 / kernel / 子图为什么快、为什么慢、如何定位
 2. **推理引擎**：runtime / compiler / serving / KV cache / allocator / observability
@@ -14,8 +14,9 @@
 
 ## 当前状态说明
 
-- 五大板块结构已经稳定启用，`00-index` 与子模块索引可作为主入口使用
+- 五大主线结构已经稳定启用，`00-index` 与子模块索引可作为主入口使用
 - 推理引擎、LLM 架构、通信、算子优化四条主线已经补齐一批“实战型重构”的核心页
+- `vLLM` 与 `Chitu` 现已提升到仓库根目录一级，和 `AI Infra / CS336 / C++` 并列，更适合按框架专项复习
 - 附录继续承担术语、映射、模板与补充知识的角色，而不再充当主线入口
 - 后续新增内容默认遵循统一模板与跨章节桥接规范
 
@@ -39,15 +40,21 @@
 
 ## 写作约定
 
-主线章节尽量统一成：
+每个小章节都必须至少按下面 4 段顺序组织：
 
-1. **一页结论 / 要点**
-2. **通用知识**
-3. **最小例子 / 工程例子**
-4. **常见面试问题**
-5. **易错点**
-6. **排查 checklist**
-7. **参考资料**
+1. **背景**：为什么会有这个技术、要解决什么痛点、旧方案为什么失败
+2. **技术介绍**：重点讲实现机制，并尽量结合**原汁原味的代码**
+3. **面试考点**：高频问题、回答要点、常见追问
+4. **思考题**：逼着读者继续推演 trade-off、边界和系统判断
+
+在这 4 段之外，可按需要补充：
+
+- 关联知识网络
+- 对比表 / 决策表
+- 实战踩坑记录
+- Mermaid 流程图
+- 排查 checklist
+- 参考资料
 
 模板见：[`05-appendix/chapter-template.md`](05-appendix/chapter-template.md)
 
@@ -62,3 +69,8 @@
 - 大模型架构：[`03-llm-architecture/00-index.md`](03-llm-architecture/00-index.md)
 - 通信技术：[`04-communication/00-index.md`](04-communication/00-index.md)
 - 附录：[`05-appendix/00-index.md`](05-appendix/00-index.md)
+
+仓库根目录专题入口：
+
+- vLLM：[`../vllm/00-index.md`](../vllm/00-index.md)
+- Chitu：[`../chitu/00-index.md`](../chitu/00-index.md)

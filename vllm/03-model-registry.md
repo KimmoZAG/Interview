@@ -160,11 +160,11 @@ class MyVisionLanguageModel(nn.Module, SupportsMultiModal):
 
 ## 关联知识网络
 
-**前置**：[模型加载机制](02-model-loading.md)、[MoE 最小知识](../03-llm-architecture/06-moe-minimum.md)
+**前置**：[模型加载机制](02-model-loading.md)、[MoE 最小知识](../ai-infra/03-llm-architecture/06-moe-minimum.md)
 
 **平行**：[算子替换与定制](04-custom-ops-and-operator-replacement.md)
 
-**延伸**：[推理加速技术](05-inference-acceleration.md)、[Transformer 最小知识](../03-llm-architecture/01-transformer-minimum.md)
+**延伸**：[推理加速技术](05-inference-acceleration.md)、[Transformer 最小知识](../ai-infra/03-llm-architecture/01-transformer-minimum.md)
 
 ---
 

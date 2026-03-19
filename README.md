@@ -57,6 +57,25 @@ flowchart TD
 - [Attention 与 KV Cache](ai-infra/03-llm-architecture/02-attention-kv-cache.md)
 - [Collectives](ai-infra/04-communication/04-collectives.md)
 
+### 🚀 vLLM
+
+- 系列导读：[`vllm/00-index.md`](vllm/00-index.md)
+
+核心入口：
+
+- [架构总览](vllm/01-architecture-overview.md)
+- [模型加载机制](vllm/02-model-loading.md)
+- [多模型支持与注册](vllm/03-model-registry.md)
+- [推理加速技术](vllm/05-inference-acceleration.md)
+
+### 🐇 Chitu
+
+- 系列导读：[`chitu/00-index.md`](chitu/00-index.md)
+
+核心入口：
+
+- [赤兔推理引擎面试笔记](chitu/09-chitu-inference-engine.md)
+
 ### 🎓 CS336
 
 - 总索引：[`cs336/00-index.md`](cs336/00-index.md)
@@ -131,6 +150,13 @@ flowchart TD
 `[参考 Attention 与 KV Cache](ai-infra/03-llm-architecture/02-attention-kv-cache.md)`
 
 ### 统一模板
+
+每个小章节都必须至少包含：
+
+1. **背景**：为什么有这个技术、它解决什么痛点、旧方案为什么失败
+2. **技术介绍**：重点讲实现机制，并尽量结合**原汁原味的代码**
+3. **面试考点**
+4. **思考题**
 
 - 通用写作规范：[`reference/note-writing-playbook.md`](reference/note-writing-playbook.md)
 - AI Infra 章节模板：[`ai-infra/05-appendix/chapter-template.md`](ai-infra/05-appendix/chapter-template.md)

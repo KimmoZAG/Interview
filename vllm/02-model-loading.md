@@ -130,11 +130,11 @@ num_gpu_blocks = floor(
 
 ## 关联知识网络
 
-**前置**：[vLLM 架构总览](01-architecture-overview.md)、[Transformer 最小知识](../03-llm-architecture/01-transformer-minimum.md)
+**前置**：[vLLM 架构总览](01-architecture-overview.md)、[Transformer 最小知识](../ai-infra/03-llm-architecture/01-transformer-minimum.md)
 
 **平行**：[多模型支持与注册](03-model-registry.md)、[算子替换与定制](04-custom-ops-and-operator-replacement.md)
 
-**延伸**：[推理加速技术](05-inference-acceleration.md)、[训练资源核算](../03-llm-architecture/07-training-resource-accounting.md)
+**延伸**：[推理加速技术](05-inference-acceleration.md)、[训练资源核算](../ai-infra/03-llm-architecture/07-training-resource-accounting.md)
 
 ---
 
