@@ -4,7 +4,7 @@
 
 ## 背景 / 问题定义
 
-做代际比较时，最容易掉进两个坑。第一个坑是只看 benchmark 排名，把模型演进误读成“更大参数 + 更高分数”；第二个坑是只看局部创新，把 DeepSeekMoE、MLA、DualPipe、FP8、GRPO 看成互不相关的技巧。实际上，DeepSeek 代际演进回答的是一个更硬核的问题：**当模型规模、推理上下文、分布式通信和 reasoning 训练同时增长时，应该优先优化哪一个瓶颈，以及这些优化如何彼此接力**。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
+做代际比较时，最容易掉进两个坑。第一个坑是只看 benchmark 排名，把模型演进误读成“更大参数 + 更高分数”；第二个坑是只看局部创新，把 DeepSeekMoE、MLA、DualPipe、FP8、GRPO 看成互不相关的技巧。实际上，DeepSeek 代际演进真正回答的是一个更硬核的问题：**当模型规模、推理上下文、分布式通信和 reasoning 训练同时增长时，应该优先优化哪一个瓶颈，以及这些优化如何彼此接力** [DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]。
 
 从这个角度看，四篇论文各自的职责非常清晰：
 
@@ -48,12 +48,12 @@ flowchart LR
 
 ## 关键结论
 
-- DeepSeek 的主线不是单一维度的 scaling，而是 **架构稀疏化 → KV 压缩 → 系统协同 → RL reasoning** 的连续推进。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
+- DeepSeek 的主线不是单一维度的 scaling，而是 **架构稀疏化 → KV 压缩 → 系统协同 → RL reasoning** 的连续推进 [DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]。
 - **DeepSeekMoE** 先解决“MoE 是否真的带来更高有效容量”。
 - **DeepSeek-V2** 再解决“MoE 能不能同时高效训练和高效推理”。
 - **DeepSeek-V3** 继续解决“超大 MoE 的训练、通信与部署是否还能一起成立”。
 - **DeepSeek-R1** 最后把这些节省下来的预算进一步转化成更强 reasoning 行为。
-- 因此，DeepSeek 的竞争力来自协同优化：只保留其中一个部件，通常拿不到论文展示的那组结果。[DeepSeek-V2, Sections 2.2.2-2.2.3; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Section 6]
+- 因此，DeepSeek 的竞争力来自协同优化：只保留其中一个部件，通常拿不到论文展示的整组结果 [DeepSeek-V2, Sections 2.2.2-2.2.3; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Section 6]。
 
 ## 本页在系列中的位置
 
@@ -86,7 +86,7 @@ flowchart LR
     D --> D2[能力：reasoning 行为显式增强]
 ```
 
-这张图对应的是一条非常明确的协同链条：DeepSeekMoE 提高参数利用率，V2 把这部分收益转化成可部署的推理效率，V3 再把系统效率放大到超大规模训练与服务，R1 则把这些节省出来的预算投入到 reasoning 行为本身。因此，R1 并不是脱离前代的独立故事，而是前面三代工程积累的自然结果。[DeepSeek-V3, Section 6; DeepSeek-R1, Section 1]
+这张图对应的是一条非常明确的协同链条：DeepSeekMoE 提高参数利用率，V2 把这部分收益转化成可部署的推理效率，V3 再把系统效率放大到超大规模训练与服务，R1 则把这些节省出来的预算投入到 reasoning 行为本身。因此，R1 并不是脱离前代的独立故事，而是前三代工程积累的自然结果 [DeepSeek-V3, Section 6; DeepSeek-R1, Section 1]。
 
 ## 数学基础
 
@@ -102,7 +102,7 @@ $$
 \mathbf{v}^C_t = W^{UV}\mathbf{c}^{KV}_t
 $$
 
-其中真正需要缓存的是压缩后的 $\mathbf{c}^{KV}_t$，而不是传统 MHA 中每个头的完整 $K/V$。V2 进一步通过 decoupled RoPE 让位置编码与 KV 压缩兼容，从而避免因 RoPE 破坏投影吸收关系而在推理时重算前缀 keys。[DeepSeek-V2, Sections 2.1.2-2.1.3] V3 延续了这一结构，并把它作为更大规模训练与部署的 attention 基座。[DeepSeek-V3, Section 2.1.1]
+其中真正需要缓存的是压缩后的 $\mathbf{c}^{KV}_t$，而不是传统 MHA 中每个头的完整 $K/V$。V2 再通过 decoupled RoPE 让位置编码与 KV 压缩兼容，从而避免因 RoPE 破坏投影吸收关系而在推理时重算前缀 keys [DeepSeek-V2, Sections 2.1.2-2.1.3]。V3 延续了这一结构，并把它作为更大规模训练与部署的 attention 基座 [DeepSeek-V3, Section 2.1.1]。
 
 ### Auxiliary-loss-free routing：把负载均衡从 loss 项改成路由控制项
 
@@ -170,15 +170,16 @@ $$
 
 ### 为什么 DeepSeek 不是简单堆参数，而是持续做系统级协同优化
 
-这是理解 DeepSeek 路线最关键的一节。只看参数规模会得出一个过于浅层的结论：模型越大越强。但 DeepSeek 的论文证据其实反复指向另一件事——**真正限制模型能力的，不是参数上限本身，而是参数、缓存、通信、训练信号和部署方式之间的耦合瓶颈。**
+这是理解 DeepSeek 路线最关键的一节。只看参数规模，很容易得出“模型越大越强”的浅层结论；但 DeepSeek 的论文反复说明，**真正限制能力的，不是参数上限本身，而是参数、缓存、通信、训练信号和部署方式之间的耦合瓶颈。**
 
-先看 DeepSeekMoE。它并没有先追求更大 dense 模型，而是指出传统 GShard 风格 MoE 的问题在于专家知识混杂与冗余，因此先优化 expert specialization。[DeepSeekMoE, Sections 1, 3] 这一步的收益，是让更多参数转化为真正可分工的有效容量；代价，是后续必须开始认真面对路由与部署复杂度。
+按代际看，这条主线其实很清楚：
 
-再看 DeepSeek-V2。论文实际上在说：即使 MoE 已经有效，如果 attention 仍保持标准 MHA 形态，那么长上下文和高并发生成下的 KV cache 会直接卡死推理效率。因此 V2 不满足于“模型能跑”，而是把 MLA 做成主创新，让 attention 自身变得更适合服务化部署。[DeepSeek-V2, Section 2.1] 这换来了明显的 KV cache 压缩和吞吐提升，但也要求额外处理 decoupled RoPE 和 latent projection 的实现复杂度。[DeepSeek-V2, Sections 2.1.3-2.1.4]
+1. **DeepSeekMoE 先解决“参数怎么变成有效容量”**：它没有先追求更大 dense 模型，而是先指出传统 GShard 风格 MoE 容易出现专家知识混杂与冗余，因此优先优化 expert specialization [DeepSeekMoE, Sections 1, 3]。收益是更多参数真正变成可分工容量，代价则是后续必须认真处理路由与部署复杂度。
+2. **DeepSeek-V2 再解决“模型怎么高效服务化”**：即使 MoE 已经有效，如果 attention 仍保持标准 MHA 形态，长上下文和高并发生成下的 KV cache 仍会卡死推理效率。因此 V2 把 MLA 做成主创新，让 attention 自身更适合服务化部署 [DeepSeek-V2, Section 2.1]。这换来了明显的 KV cache 压缩和吞吐提升，但也引入 decoupled RoPE 与 latent projection 的实现复杂度 [DeepSeek-V2, Sections 2.1.3-2.1.4]。
+3. **DeepSeek-V3 把问题推进到“超大规模系统能否闭环”**：当模型进入 671B / 37B 激活规模后，核心问题已不再是“结构好不好”，而是“负载均衡是否稳定、pipeline bubble 是否可控、跨节点 all-to-all 是否能隐藏、FP8 是否可用” [DeepSeek-V3, Sections 2.1.2, 3.2, 3.3]。这些都不能靠单纯堆参数自动解决，所以 V3 必须把 routing、pipeline、kernel、precision 和 deployment 一起写进主线。
+4. **R1 则把瓶颈扩展到“训练信号能否持续放大 reasoning”**：R1 的关键结论不是“更大模型自然更会推理”，而是 reasoning 能力可以在可验证任务上被 RL 显式诱导出来；但 pure RL 会带来语言混杂、可读性差、reward hacking 和 tool use 不足，所以又必须用冷启动数据、SFT 和第二阶段 RL 把行为拉回产品可用区间 [DeepSeek-R1, Sections 2-3, 6]。
 
-V3 则把 trade-off 再往前推一步：当模型进入 671B / 37B 激活规模后，问题已经不是“模型结构好不好”，而是“负载均衡是否稳定、pipeline bubble 是否可控、跨节点 all-to-all 是否能隐藏、FP8 是否可用”。[DeepSeek-V3, Sections 2.1.2, 3.2, 3.3] 这类问题没有任何一项能通过单纯堆参数自动解决，所以 V3 必须把 routing、pipeline、kernel、precision 和 deployment 全部写进主线。
-
-最后是 R1。R1 的关键结论不是“更大模型自然更会推理”，而是 reasoning 能力可以被 RL 在可验证任务上显式诱导出来；但纯 RL 会带来语言混杂、可读性差、reward hacking 和 tool use 不足，所以又必须用冷启动数据、SFT 和第二阶段 RL 把行为拉回产品可用区间。[DeepSeek-R1, Sections 2-3, 6] 也就是说，R1 让 trade-off 从“系统效率 vs 模型规模”继续扩展到“探索自由度 vs 产品可控性”。
+也就是说，R1 让 trade-off 从“系统效率 vs 模型规模”继续扩展到“探索自由度 vs 产品可控性”。
 
 ### 关键设计取舍总表
 
