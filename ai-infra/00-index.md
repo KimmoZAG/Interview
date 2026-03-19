@@ -48,22 +48,6 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 
     [:octicons-arrow-right-24: 进入](04-communication/00-index.md)
 
-- :material-rocket-launch: **vLLM 深度解析**
-
-    ---
-
-    从模型加载、多架构注册、算子热插拔，到 PagedAttention / 连续批处理 / CUDA Graphs / 前缀缓存 / 投机解码，逐层解析 vLLM 内部机制。
-
-    [:octicons-arrow-right-24: 进入](06-vllm/00-index.md)
-
-- :material-rabbit: **赤兔推理引擎**
-
-    ---
-
-    聚焦 Chitu 的动态批处理、KV 管理、量化、硬件适配与阿里云 PAI 协同，适合做专项面试准备。
-
-    [:octicons-arrow-right-24: 进入](07-chitu/00-index.md)
-
 - :material-bookshelf: **附录**
 
     ---
@@ -158,25 +142,8 @@ description: AI 基础设施工程师视角，涵盖推理栈、算子优化、L
 > [`Collectives`](04-communication/04-collectives.md) ·
 > [`并行到通信映射`](04-communication/05-parallelism-to-communication.md)
 
-### vLLM 深度解析
-
-| 篇目 | 核心问题 |
-|---|---|
-| [架构总览](06-vllm/01-architecture-overview.md) | LLMEngine / Worker / Scheduler / BlockManager 分工与请求全链路 |
-| [模型加载机制](06-vllm/02-model-loading.md) | 权重从磁盘到 GPU 显存的完整流水线，TP 切分与 KV cache 预分配 |
-| [多模型支持与注册](06-vllm/03-model-registry.md) | ModelRegistry 工作原理，如何接入新架构（LLaMA / Qwen / DeepSeek 等）|
-| [算子替换与定制](06-vllm/04-custom-ops-and-operator-replacement.md) | 注意力后端热插拔、量化线性层替换、自定义 CUDA kernel 注入 |
-| [推理加速技术](06-vllm/05-inference-acceleration.md) | PagedAttention / 连续批处理 / CUDA Graphs / 前缀缓存 / 投机解码 |
-
-### 赤兔推理引擎
-
-| 篇目 | 核心问题 |
-|---|---|
-| [赤兔（Chitu）推理引擎：面试备战笔记](07-chitu/09-chitu-inference-engine.md) | 动态批处理、KV 管理、量化、硬件适配，以及与 vLLM / TensorRT-LLM 的场景对比 |
-
----
-
 ## 迁移说明
 
 - 重构路线图：[`restructure-roadmap.md`](restructure-roadmap.md)
 - 章节模板：[`05-appendix/chapter-template.md`](05-appendix/chapter-template.md)
+- 相关专题：[`../vllm/00-index.md`](../vllm/00-index.md) · [`../chitu/00-index.md`](../chitu/00-index.md)

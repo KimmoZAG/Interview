@@ -76,13 +76,13 @@ vLLM 架构总览
 
 | 主题 | 链接 |
 |------|------|
-| KV Cache 基础 | [Attention & KV Cache](../03-llm-architecture/02-attention-kv-cache.md) |
-| Paged KV 与 Allocator | [Paged KV & Allocator](../02-inference-engine/07-paged-kv-and-allocator.md) |
-| LLM Serving 框架 | [LLM Serving](../02-inference-engine/04-llm-serving.md) |
-| FlashAttention IO-aware | [FlashAttention](../01-operator-optimization/06-flashattention-io-aware.md) |
-| 量化基础 | [量化 Basics](../01-operator-optimization/05-quantization-basics.md) |
-| 训练并行策略 | [训练并行](../04-communication/01-training-parallelism.md) |
+| KV Cache 基础 | [Attention & KV Cache](../ai-infra/03-llm-architecture/02-attention-kv-cache.md) |
+| Paged KV 与 Allocator | [Paged KV & Allocator](../ai-infra/02-inference-engine/07-paged-kv-and-allocator.md) |
+| LLM Serving 框架 | [LLM Serving](../ai-infra/02-inference-engine/04-llm-serving.md) |
+| FlashAttention IO-aware | [FlashAttention](../ai-infra/01-operator-optimization/06-flashattention-io-aware.md) |
+| 量化基础 | [量化 Basics](../ai-infra/01-operator-optimization/05-quantization-basics.md) |
+| 训练并行策略 | [训练并行](../ai-infra/04-communication/01-training-parallelism.md) |
 
 ---
 
-[← 返回 AI Infra 总索引](../00-index.md)
+[← 返回 AI Infra 总索引](../ai-infra/00-index.md)

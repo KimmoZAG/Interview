@@ -400,21 +400,21 @@ gpu_memory_utilization: 0.88
 - **核心论文**：[Efficient Memory Management for Large Language Model Serving with PagedAttention（vLLM）](https://arxiv.org/abs/2309.06180) — 理解 Paged KV Cache 的理论基础，赤兔类似机制的设计来源之一。
 - **工程博客**：搜索"Continuous Batching：How It Works and Why It Matters"（Anyscale 博客）— 帮助快速建立 Continuous Batching 的直觉。
 - **相关笔记**：
-    - [LLM Serving：batching、paged KV、常见方案](../02-inference-engine/04-llm-serving.md)
-    - [推理优化 Playbook](../02-inference-engine/05-optimization-playbook.md)
-    - [Paged KV 与 Allocator](../02-inference-engine/07-paged-kv-and-allocator.md)
+    - [LLM Serving：batching、paged KV、常见方案](../ai-infra/02-inference-engine/04-llm-serving.md)
+    - [推理优化 Playbook](../ai-infra/02-inference-engine/05-optimization-playbook.md)
+    - [Paged KV 与 Allocator](../ai-infra/02-inference-engine/07-paged-kv-and-allocator.md)
 
 ---
 
 ## 关联知识网络
 
-- 前置：[推理栈全景](../02-inference-engine/01-inference-stack-overview.md)
-- 平行：[LLM Serving：batching、paged KV、常见方案](../02-inference-engine/04-llm-serving.md)
-- 平行：[ONNX Runtime / TensorRT](../02-inference-engine/02-runtime-onnxruntime-tensorrt.md)
-- 延伸：[Paged KV 与 Allocator](../02-inference-engine/07-paged-kv-and-allocator.md)
-- 延伸：[可观测性与调试](../02-inference-engine/06-observability-and-debugging.md)
-- 方法论：[推理优化 Playbook](../02-inference-engine/05-optimization-playbook.md)
-- 算子基础：[量化基础](../01-operator-optimization/05-quantization-basics.md)
+- 前置：[推理栈全景](../ai-infra/02-inference-engine/01-inference-stack-overview.md)
+- 平行：[LLM Serving：batching、paged KV、常见方案](../ai-infra/02-inference-engine/04-llm-serving.md)
+- 平行：[ONNX Runtime / TensorRT](../ai-infra/02-inference-engine/02-runtime-onnxruntime-tensorrt.md)
+- 延伸：[Paged KV 与 Allocator](../ai-infra/02-inference-engine/07-paged-kv-and-allocator.md)
+- 延伸：[可观测性与调试](../ai-infra/02-inference-engine/06-observability-and-debugging.md)
+- 方法论：[推理优化 Playbook](../ai-infra/02-inference-engine/05-optimization-playbook.md)
+- 算子基础：[量化基础](../ai-infra/01-operator-optimization/05-quantization-basics.md)
 
 ---
 

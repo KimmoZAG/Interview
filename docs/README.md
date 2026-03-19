@@ -18,6 +18,22 @@ description: 工程师视角的技术面试备考笔记，聚焦 AI Infra 系统
 
     [:octicons-arrow-right-24: 进入 AI Infra](ai-infra/00-index.md)
 
+- :material-rocket-launch: **vLLM**
+
+    ---
+
+    从模型加载、多模型注册、算子替换到推理加速，按框架主线理解 vLLM 内部机制。
+
+    [:octicons-arrow-right-24: 进入 vLLM](vllm/00-index.md)
+
+- :material-rabbit: **Chitu**
+
+    ---
+
+    聚焦赤兔推理引擎的动态批处理、KV 管理、量化、硬件适配与平台协同。
+
+    [:octicons-arrow-right-24: 进入 Chitu](chitu/00-index.md)
+
 - :material-language-cpp: **C++**
 
     ---

@@ -4,21 +4,19 @@
 
 ## 新组织方式（主线）
 
-本目录已开始从旧的 `operators / models / inference / appendix` 四类结构，重构为更适合学习、复习与面试的 **五大主线 + 两个专题目录**：
+本目录已开始从旧的 `operators / models / inference / appendix` 四类结构，重构为更适合学习、复习与面试的五大主线：
 
 1. **算子优化**：单个算子 / kernel / 子图为什么快、为什么慢、如何定位
 2. **推理引擎**：runtime / compiler / serving / KV cache / allocator / observability
 3. **大模型架构**：推理优化工程师需要掌握的 Transformer / attention / sampling / MoE 等核心知识
 4. **通信技术**：collectives、互联拓扑、并行策略、MoE 通信、多卡推理扩展性
 5. **附录**：术语、参考、CS336 映射，以及对主线有帮助但不属于第一优先级的扩展内容
-6. **vLLM 专题**：围绕模型加载、注册、算子替换与推理加速做深入拆解
-7. **Chitu 专题**：聚焦赤兔推理引擎的架构特点、面试表达与场景对比
 
 ## 当前状态说明
 
 - 五大主线结构已经稳定启用，`00-index` 与子模块索引可作为主入口使用
 - 推理引擎、LLM 架构、通信、算子优化四条主线已经补齐一批“实战型重构”的核心页
-- `vLLM` 与 `Chitu` 已独立为一级专题目录，方便按框架做专项复习
+- `vLLM` 与 `Chitu` 现已提升到仓库根目录一级，和 `AI Infra / CS336 / C++` 并列，更适合按框架专项复习
 - 附录继续承担术语、映射、模板与补充知识的角色，而不再充当主线入口
 - 后续新增内容默认遵循统一模板与跨章节桥接规范
 
@@ -30,8 +28,7 @@
 2. `01-operator-optimization/`
 3. `02-inference-engine/`
 4. `04-communication/`
-5. `06-vllm/` / `07-chitu/`
-6. `05-appendix/`
+5. `05-appendix/`
 
 如果你是从 `CS336` 过来的，推荐按下面的桥接顺序往 `AI Infra` 深挖：
 
@@ -65,6 +62,9 @@
 - 推理引擎：[`02-inference-engine/00-index.md`](02-inference-engine/00-index.md)
 - 大模型架构：[`03-llm-architecture/00-index.md`](03-llm-architecture/00-index.md)
 - 通信技术：[`04-communication/00-index.md`](04-communication/00-index.md)
-- vLLM 专题：[`06-vllm/00-index.md`](06-vllm/00-index.md)
-- Chitu 专题：[`07-chitu/00-index.md`](07-chitu/00-index.md)
 - 附录：[`05-appendix/00-index.md`](05-appendix/00-index.md)
+
+仓库根目录专题入口：
+
+- vLLM：[`../vllm/00-index.md`](../vllm/00-index.md)
+- Chitu：[`../chitu/00-index.md`](../chitu/00-index.md)

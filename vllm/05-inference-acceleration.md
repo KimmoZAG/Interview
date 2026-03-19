@@ -270,11 +270,11 @@ LLM(
 
 ## 关联知识网络
 
-**前置**：[vLLM 架构总览](01-architecture-overview.md)、[Paged KV & Allocator](../02-inference-engine/07-paged-kv-and-allocator.md)、[LLM Serving](../02-inference-engine/04-llm-serving.md)
+**前置**：[vLLM 架构总览](01-architecture-overview.md)、[Paged KV & Allocator](../ai-infra/02-inference-engine/07-paged-kv-and-allocator.md)、[LLM Serving](../ai-infra/02-inference-engine/04-llm-serving.md)
 
-**平行**：[算子替换与定制](04-custom-ops-and-operator-replacement.md)、[FlashAttention IO-aware](../01-operator-optimization/06-flashattention-io-aware.md)
+**平行**：[算子替换与定制](04-custom-ops-and-operator-replacement.md)、[FlashAttention IO-aware](../ai-infra/01-operator-optimization/06-flashattention-io-aware.md)
 
-**延伸**：[长上下文 Serving](../02-inference-engine/08-long-context-serving.md)、[分布式通信](../04-communication/04-collectives.md)
+**延伸**：[长上下文 Serving](../ai-infra/02-inference-engine/08-long-context-serving.md)、[分布式通信](../ai-infra/04-communication/04-collectives.md)
 
 ---
 
@@ -312,4 +312,4 @@ LLM(
 
 ---
 
-[← 算子替换与定制](04-custom-ops-and-operator-replacement.md) | [返回 vLLM 索引](00-index.md) | [← 返回 AI Infra 总索引](../00-index.md)
+[← 算子替换与定制](04-custom-ops-and-operator-replacement.md) | [返回 vLLM 索引](00-index.md) | [← 返回 AI Infra 总索引](../ai-infra/00-index.md)
