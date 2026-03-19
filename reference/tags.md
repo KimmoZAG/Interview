@@ -2,4 +2,4 @@
 
 按标签浏览所有笔记页面。
 
-[TAGS]
+<!-- material/tags -->

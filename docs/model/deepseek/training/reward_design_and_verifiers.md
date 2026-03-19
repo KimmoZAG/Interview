@@ -1,0 +1,1 @@
+--8<-- "../../model/deepseek/training/reward_design_and_verifiers.md"

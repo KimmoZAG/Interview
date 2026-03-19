@@ -103,12 +103,13 @@ plugins:
         - zh
         - en
   - tags:
-      tags_file: reference/tags.md
   - git-revision-date-localized:
       enable_creation_date: true
       type: timeago
       locale: zh
       fallback_to_build_date: true
+      exclude:
+      - model/deepseek/**
   - glightbox:
       touchNavigation: true
       loop: false
@@ -223,6 +224,25 @@ nav:
       - 术语表: c++/appendix/glossary.md
       - 坑位清单: c++/appendix/gotchas.md
       - 参考资料: c++/appendix/references.md
+
+  - DeepSeek:
+    - 总览: model/deepseek/index.md
+    - 架构专题:
+      - DeepSeekMoE: model/deepseek/architecture/deepseek_moe.md
+      - MLA 注意力: model/deepseek/architecture/mla_attention.md
+      - 路由与负载均衡: model/deepseek/architecture/routing_and_load_balancing.md
+      - 长上下文与 YaRN: model/deepseek/architecture/long_context_and_yarn.md
+    - 训练与对齐:
+      - 预训练策略: model/deepseek/training/pretraining_strategies.md
+      - RL 与 Alignment: model/deepseek/training/rl_and_alignment.md
+      - Reward 与 Verifier: model/deepseek/training/reward_design_and_verifiers.md
+      - RL 基础设施: model/deepseek/training/rl_infrastructure.md
+      - Distillation 与 Transfer: model/deepseek/training/distillation_and_transfer.md
+      - Failure Modes 与 Limitations: model/deepseek/training/failure_modes_and_limitations.md
+    - 工程系统:
+      - 工程优化与系统性能: model/deepseek/engineering/infra_optimization.md
+    - 对比与演进:
+      - V1 到 V3 代际演进: model/deepseek/comparison/v1_to_v3_evolution.md
 
   - 参考资料:
     - CS336 原始讲义链接: reference/cs336.md
