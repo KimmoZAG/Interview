@@ -42,12 +42,6 @@ flowchart LR
     G --> H[MoE layer output h_t']
 ```
 
-### 论文原图（授权引用）
-
-![DeepSeek-V2 Figure 2（包含 MLA 与 DeepSeekMoE 的联合架构示意）](./_figures/v2-fig2-architecture-page5.png)
-
-*图源：DeepSeek-V2 技术报告 Figure 2（论文原图页截图），用于开源技术解读与引用。*
-
 ### 表 1：Shared experts 与 routed experts 的职责划分
 
 | 角色 | 激活方式 | 主要职责 | 解决的问题 |
@@ -88,6 +82,12 @@ flowchart LR
 - DeepSeekMoE 的核心创新不是“把 MoE 做得更大”，而是把 expert 的粒度与职责重新设计成更适合 specialization 的形式。[DeepSeekMoE, Sections 1, 3]
 - Fine-grained expert segmentation 解决的是粗粒度 expert 的知识混装问题，shared expert isolation 解决的是 routed experts 之间的公共知识冗余问题。[DeepSeekMoE, Sections 1, 3.1-3.2]
 - 这套结构的真正代价落在系统层：专家更细、激活更多，就必须面对通信、路由和负载均衡复杂度上升，因此 V2/V3 才会进一步引入 device-limited routing 与 auxiliary-loss-free balancing。[DeepSeek-V2, Section 2.2.2; DeepSeek-V3, Section 2.1.2]
+
+## 本页在系列中的位置
+
+- 这一页回答的是：**为什么 DeepSeek 要先从专家粒度和专家职责下手，而不是先优化路由技巧。**
+- 读完本页后，最自然的下一步是 `routing_and_load_balancing.md`，因为专家一旦切细，通信边界和负载均衡就会立刻成为主问题。
+- 如果你更关心推理侧收益，再继续读 `mla_attention.md`，看 DeepSeek 如何在 attention 路径上再省一层系统成本。
 
 ## 核心机制
 
@@ -510,3 +510,9 @@ DeepSeekMoE 对 MoE 的最大贡献，不是证明“稀疏激活能省算力”
 - DeepSeek-V3 是 **训练动态层** 的优化。
 
 这三者连起来，才构成了 DeepSeek 稀疏模型路线的完整逻辑链。
+
+## 思考问题
+
+- 如果不引入 shared experts，只把 routed experts 数量继续做大，哪些问题会先爆出来：知识冗余、通信成本还是训练不稳？
+- fine-grained experts 提升了组合自由度，但也提高了 bookkeeping 和 all-to-all 成本。你会在什么规模下认为这笔交换开始划算？
+- DeepSeekMoE 的设计更像“先提高单位激活参数的知识密度”。如果把这一思想迁移到非 MoE 架构，你会改哪里？

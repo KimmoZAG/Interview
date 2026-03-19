@@ -22,6 +22,12 @@
 - 表 4：工程实现重点总览
 - 表 5：与 Llama / GPT / 传统 Transformer 路线对比
 
+## 使用说明
+
+- 如果你第一次读 DeepSeek，优先看 `comparison/v1_to_v3_evolution.md`，先建立“为什么每一代都在改不同瓶颈”的主线。
+- 如果你读到跨页重复的公式，请把专题页当作主定义页：`architecture/mla_attention.md` 负责 MLA，`training/rl_and_alignment.md` 负责 GRPO，`training/reward_design_and_verifiers.md` 负责奖励与 verifier。
+- 如果你只想抓住工程落地顺序，可以按“架构 → 路由/长上下文 → 训练与对齐 → 工程系统”来读，而不是在每页里来回跳。
+
 ## 图表总览（重绘版，先看这块）
 
 ### 图 1：DeepSeek 三条主线演进路线图（Mermaid）
@@ -54,16 +60,6 @@ flowchart LR
 | 算法创新 | 稀疏容量与注意力结构 | 提高单位计算的能力密度 |
 | 工程优化 | 通信、显存、并行、部署 | 把论文收益兑现为系统收益 |
 | 训练与对齐 | SFT/RL/GRPO | 把基座能力转成推理能力 |
-
-### 论文原图速览（授权引用）
-
-![DeepSeek-V2 Figure 2](architecture/_figures/v2-fig2-architecture-page5.png)
-
-![DeepSeek-V3 Figure 2](architecture/_figures/v3-fig2-architecture-page7.png)
-
-![DeepSeek-R1 Figure 2](training/_figures/r1-fig2-pipeline-page6.png)
-
-*图源：DeepSeek-V2 / V3 / R1 技术报告对应 Figure（论文原图页截图），用于开源技术解读与引用。*
 
 ## 关键结论
 
@@ -169,6 +165,12 @@ DeepSeek 的真正主线，可以压缩成一句话：**不是把模型先做大
 2. 架构收益如果不落到部署与通信实现上，通常兑现不成真正的产品收益；DeepSeek-V2 到 V3 的演进本质上就是在证明这一点。[DeepSeek-V2, Section 3.2.3; DeepSeek-V3, Sections 3.2-3.4]
 3. 后训练不应只被视为“口风微调”，R1 证明它可以是 reasoning 行为的主要生成机制。[DeepSeek-R1, Sections 2-3]
 4. 因此，DeepSeek 不是简单的论文串烧，而是一套持续演进的技术知识库主线，后续专题页应围绕这条主线展开，而不是各写各的局部亮点。
+
+## 思考问题
+
+- 如果只能保留 DeepSeek 路线中的一个创新，你会选 `DeepSeekMoE`、`MLA`、`V3 系统协同` 还是 `R1 的 RL 路线`？为什么？
+- DeepSeek 的主线更像“把算力省下来再重新分配”，而不是“持续把模型做大”。这种策略在哪些团队条件下最有效？
+- 如果你要把这套系列继续扩写，下一篇最应该补的是“统一符号页”“结构化输出/工具使用”还是“训练—部署闭环复盘”？
 
 ## 阅读导航
 

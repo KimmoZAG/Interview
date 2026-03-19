@@ -37,16 +37,6 @@ flowchart LR
     C --> D[DeepSeek-R1<br/>GRPO + 多阶段 RL/SFT]
 ```
 
-### 论文原图（授权引用）
-
-![DeepSeek-V2 Figure 2（V2 架构示意）](../architecture/_figures/v2-fig2-architecture-page5.png)
-
-![DeepSeek-V3 Figure 2（V3 架构示意）](../architecture/_figures/v3-fig2-architecture-page7.png)
-
-![DeepSeek-R1 Figure 2（R1 多阶段训练流水线）](../training/_figures/r1-fig2-pipeline-page6.png)
-
-*图源：DeepSeek-V2 / DeepSeek-V3 / DeepSeek-R1 技术报告对应 Figure（论文原图页截图），用于开源技术解读与引用。*
-
 ### 表 1：代际核心指标总表（精简）
 
 | 代际 | 核心动作 | 主要收益 | 主要代价 |
@@ -61,6 +51,12 @@ flowchart LR
 - DeepSeek 的演进主线不是单一维度的 scaling，而是 **架构稀疏化 → KV 压缩 → 系统协同 → RL reasoning** 的连续推进。[DeepSeekMoE, Section 9; DeepSeek-V2, Section 5; DeepSeek-V3, Section 6; DeepSeek-R1, Section 6]
 - DeepSeekMoE 解决的是“MoE 够不够专精”；V2 解决的是“MoE 能不能高效推理”；V3 解决的是“超大 MoE 能不能稳定扩展”；R1 解决的是“这些能力如何转化为更强 reasoning”。[DeepSeekMoE, Section 3; DeepSeek-V2, Sections 2-3; DeepSeek-V3, Sections 2-3; DeepSeek-R1, Sections 2-3]
 - 因此，DeepSeek 的系统优势来自协同优化：如果只保留其中一个部件，例如只上 MoE 不控通信，或只做 RL 不解决基座可训练性，都拿不到论文展示的那组结果。[DeepSeek-V2, Sections 2.2.2-2.2.3; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Section 6]
+
+## 本页在系列中的位置
+
+- 这一页是整个 DeepSeek 系列的“地图页”，适合在深入专题前先读一遍，也适合读完几篇专题后回来做总复盘。
+- 如果你已经知道自己想钻哪条线：架构看 `architecture/`，训练看 `training/`，系统看 `engineering/`。
+- 如果你发现不同页面都在重复提到同一个词，这一页的作用就是告诉你：**它们重复的不是废话，而是同一条代际主线在不同层面上的投影。**
 
 ## 核心机制
 
@@ -213,3 +209,9 @@ DeepSeek 的代际演进可以总结成一句话：**每一代都优先解决当
 3. **负载均衡最好从“训练目标”逐步过渡到“控制逻辑”。** V2 主要靠辅助损失，V3 则把 bias-based auxiliary-loss-free routing 变成主机制，这是从统计平衡走向系统可控的标志。[DeepSeek-V2, Section 2.2.3; DeepSeek-V3, Section 2.1.2]
 4. **Reasoning 训练要优先选“可验证任务”，再谈大规模 RL。** R1 的成功依赖数学、代码、逻辑这类能给出稳定 rule-based reward 的场景；对难验证任务，reward hacking 仍是核心风险。[DeepSeek-R1, Sections 2.2, 6]
 5. **真正的竞争力来自预算重分配能力。** 当你能通过稀疏化、KV 压缩、FP8、通信重叠省出预算，就能把这些预算转成更长上下文、更大 rollout 或更强服务能力；这比单纯“加卡加参数”更可持续。[DeepSeek-V2, Abstract; DeepSeek-V3, Sections 3.2-3.3; DeepSeek-R1, Section 6]
+
+## 思考问题
+
+- DeepSeek 的四代演进里，哪一次转折最关键：从 DeepSeekMoE 到 V2，还是从 V3 到 R1？为什么？
+- 如果没有 V3 的系统协同，R1 的 reasoning 放大会不会仍然成立？成立的是能力上限，还是只是实验可行性？
+- 你会如何把 DeepSeek 这条主线翻译成自己团队的 roadmap：先做架构、先做系统，还是先做 post-training？

@@ -12,9 +12,15 @@
 - Training 侧不是简单拿回样本就反向传播，而是要解决两个现实问题：**超长序列 padding 浪费** 与 **多设备负载不均**。因此 DeepSeek 明确使用全局长度排序、Best-Fit packing 和 chunk 对齐策略 [DeepSeek-R1, Appendix B.1]。
 - 真正高杠杆的工程设计，是 **模块级 VRAM offload / reload**。DeepSeek 不是让 actor、reference、reward model 全部常驻 GPU，而是让它们按阶段轮班占用显存，使 RL 可以在有限资源下处理数万 token 级长输出 [DeepSeek-R1, Appendix B.1]。
 
+## 本页在系列中的位置
+
+- 这一页不再解释 GRPO 的目标函数，也不再细讲 reward 设计；那两部分分别在 `rl_and_alignment.md` 与 `reward_design_and_verifiers.md`。
+- 本页专门回答：**当你已经决定要做长 CoT RL 之后，这套训练闭环到底怎么在系统层跑起来。**
+- 如果你更关心这条路线的副作用和现实边界，读完直接接 `failure_modes_and_limitations.md`。
+
 ## 背景 / 问题定义
 
-从高层看，R1 的训练似乎只是“多了个 RL 阶段”；但从系统角度看，它比常规 SFT 或短输出 RLHF 要难得多，主要有三个原因。
+从高层看，R1 的训练似乎只是“多了个 RL 阶段”；但如果前两页已经把算法与奖励讲清楚，本页更关心的是另一件事：**为什么同样是 RL，长 CoT reasoning 的系统负担会比常规 SFT 或短输出 RLHF 重得多**。
 
 ### 第一，样本不是现成的，而是要在线生成
 
@@ -408,3 +414,9 @@ DeepSeek-R1 的 RL infrastructure 可以概括成一句话：
 - `VRAM offload / reload` 则让整个系统在有限资源下依然可运行。
 
 如果说 `GRPO` 解决的是“怎么优化”，那这套 RL infrastructure 解决的就是另一个更现实的问题：**怎么把这种优化真的跑到足够大、足够长、足够稳定。**
+
+## 思考问题
+
+- 在这套 RL infrastructure 里，真正的瓶颈更像是 rollout、verifier，还是显存切换？为什么？
+- 如果没有模块级 offload / reload，R1 这种长 CoT RL 还剩多大现实可行性？
+- 你会优先把这套基础设施迁移到 tool use、软件工程 RL，还是结构化输出场景？为什么？

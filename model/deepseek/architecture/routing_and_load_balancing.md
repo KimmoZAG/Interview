@@ -449,3 +449,9 @@ DeepSeek 的路由与负载均衡演进，可以压成一句话：
 - `DeepSeek-V3`：最后把负载均衡从辅助损失推进到 bias-based routing control，并配上 node-limited routing 与 no token-dropping。
 
 如果说 `deepseek_moe.md` 讲的是“专家为什么值得被切细”，那么这一页讲的就是另一半真相：**专家切细之后，只有路由和负载均衡也跟着升级，这套 MoE 才真的能在大系统里跑得起来，而且跑得值得。**
+
+## 思考问题
+
+- 在 V2 和 V3 之间，你更认可“用 auxiliary loss 逼平衡”还是“用 bias 控制路由”这条思路？为什么？
+- 如果你的集群拓扑经常变化，device-limited 或 node-limited routing 的约束应该如何重写？
+- expert specialization 与负载均衡天然存在张力。对你自己的系统来说，哪一侧更值得优先保？
