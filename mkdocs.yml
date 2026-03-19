@@ -189,6 +189,13 @@ nav:
       - 互联与拓扑: ai-infra/04-communication/03-interconnects-and-topology.md
       - 集合通信原语: ai-infra/04-communication/04-collectives.md
       - 并行到通信映射: ai-infra/04-communication/05-parallelism-to-communication.md
+    - vLLM 深度解析:
+      - 系列导读: ai-infra/06-vllm/00-index.md
+      - 架构总览: ai-infra/06-vllm/01-architecture-overview.md
+      - 模型加载机制: ai-infra/06-vllm/02-model-loading.md
+      - 多模型支持与注册: ai-infra/06-vllm/03-model-registry.md
+      - 算子替换与定制: ai-infra/06-vllm/04-custom-ops-and-operator-replacement.md
+      - 推理加速技术: ai-infra/06-vllm/05-inference-acceleration.md
     - 附录:
       - ai-infra/05-appendix/00-index.md
       - 术语表: ai-infra/05-appendix/glossary.md
