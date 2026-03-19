@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/training/distillation_and_transfer.md"
+--8<-- "model/deepseek/training/distillation_and_transfer.md"

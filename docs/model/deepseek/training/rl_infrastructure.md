@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/training/rl_infrastructure.md"
+--8<-- "model/deepseek/training/rl_infrastructure.md"

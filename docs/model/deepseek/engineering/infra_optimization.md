@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/engineering/infra_optimization.md"
+--8<-- "model/deepseek/engineering/infra_optimization.md"

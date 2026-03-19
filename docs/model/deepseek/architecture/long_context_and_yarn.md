@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/architecture/long_context_and_yarn.md"
+--8<-- "model/deepseek/architecture/long_context_and_yarn.md"

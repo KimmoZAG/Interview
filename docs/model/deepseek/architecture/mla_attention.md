@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/architecture/mla_attention.md"
+--8<-- "model/deepseek/architecture/mla_attention.md"

@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/training/failure_modes_and_limitations.md"
+--8<-- "model/deepseek/training/failure_modes_and_limitations.md"

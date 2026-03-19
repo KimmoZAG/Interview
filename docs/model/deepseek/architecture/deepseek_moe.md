@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/architecture/deepseek_moe.md"
+--8<-- "model/deepseek/architecture/deepseek_moe.md"

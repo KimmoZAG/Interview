@@ -1,1 +1,1 @@
---8<-- "../model/deepseek/index.md"
+--8<-- "model/deepseek/index.md"

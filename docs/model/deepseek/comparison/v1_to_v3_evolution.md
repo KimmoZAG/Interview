@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/comparison/v1_to_v3_evolution.md"
+--8<-- "model/deepseek/comparison/v1_to_v3_evolution.md"

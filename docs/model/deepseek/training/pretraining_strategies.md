@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/training/pretraining_strategies.md"
+--8<-- "model/deepseek/training/pretraining_strategies.md"

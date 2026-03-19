@@ -1,1 +1,1 @@
---8<-- "../../model/deepseek/architecture/routing_and_load_balancing.md"
+--8<-- "model/deepseek/architecture/routing_and_load_balancing.md"
