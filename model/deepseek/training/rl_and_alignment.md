@@ -85,6 +85,20 @@ DeepSeek-R1 的路线则更像：
 - PPO vs GRPO 对比表：说明为什么 GRPO 更适合长 CoT reasoning。
 - R1 各阶段能力变化表：展示 Dev1 / Dev2 / Dev3 / R1 的收益与代价。
 
+## 论文原图（授权引用）
+
+![DeepSeek-R1 Figure 2（多阶段训练流水线）](./_figures/r1-fig2-pipeline-page6.png)
+
+*图源：DeepSeek-R1 技术报告 Figure 2（论文原图页截图），用于开源技术解读与引用。*
+
+![DeepSeek-R1 Figure 3（PPO 与 GRPO 机制对比）](./_figures/r1-fig3-grpo-vs-ppo-page15.png)
+
+*图源：DeepSeek-R1 技术报告 Figure 3（论文原图页截图），用于开源技术解读与引用。*
+
+![DeepSeek-R1 Figure 5（RL 框架总览）](./_figures/r1-fig5-rl-framework-page17.png)
+
+*图源：DeepSeek-R1 技术报告 Figure 5（论文原图页截图），用于开源技术解读与引用。*
+
 ## 核心机制
 
 ### 从 DeepSeek-V3-Base 到 R1：不是一步到位，而是多阶段蒸馏与再强化

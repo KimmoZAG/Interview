@@ -42,6 +42,12 @@ flowchart LR
     G --> H[MoE layer output h_t']
 ```
 
+### 论文原图（授权引用）
+
+![DeepSeek-V2 Figure 2（包含 MLA 与 DeepSeekMoE 的联合架构示意）](./_figures/v2-fig2-architecture-page5.png)
+
+*图源：DeepSeek-V2 技术报告 Figure 2（论文原图页截图），用于开源技术解读与引用。*
+
 ### 表 1：Shared experts 与 routed experts 的职责划分
 
 | 角色 | 激活方式 | 主要职责 | 解决的问题 |

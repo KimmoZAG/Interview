@@ -55,6 +55,16 @@ flowchart LR
 | 工程优化 | 通信、显存、并行、部署 | 把论文收益兑现为系统收益 |
 | 训练与对齐 | SFT/RL/GRPO | 把基座能力转成推理能力 |
 
+### 论文原图速览（授权引用）
+
+![DeepSeek-V2 Figure 2](architecture/_figures/v2-fig2-architecture-page5.png)
+
+![DeepSeek-V3 Figure 2](architecture/_figures/v3-fig2-architecture-page7.png)
+
+![DeepSeek-R1 Figure 2](training/_figures/r1-fig2-pipeline-page6.png)
+
+*图源：DeepSeek-V2 / V3 / R1 技术报告对应 Figure（论文原图页截图），用于开源技术解读与引用。*
+
 ## 关键结论
 
 - DeepSeek 的主线不是“单纯扩大模型”，而是把 **算法创新、工程优化、训练与对齐** 联合成一个预算重分配问题。[DeepSeek-V2, Abstract; DeepSeek-V3, Abstract; DeepSeek-R1, Section 6]

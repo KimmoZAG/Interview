@@ -72,6 +72,12 @@ flowchart LR
     J -.-> D
 ```
 
+### 论文原图（授权引用）
+
+![DeepSeek-V3 Figure 4（DualPipe 与计算-通信重叠策略）](./_fig-v3-fig4-dualpipe-page12.png)
+
+*图源：DeepSeek-V3 技术报告 Figure 4（论文原图页截图），用于开源技术解读与引用。*
+
 ### 表 1：并行策略对比（精简）
 
 | 策略 | 主要目标 | 主要通信 | DeepSeek 用法 |

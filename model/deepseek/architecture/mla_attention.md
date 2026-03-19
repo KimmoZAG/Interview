@@ -46,6 +46,16 @@ flowchart LR
    KR -.cache.-> C2[(cache k_t^R)]
 ```
 
+### 论文原图（授权引用）
+
+![DeepSeek-V2 Figure 3（MHA/GQA/MQA/MLA 对比示意）](./_figures/v2-fig3-mla-page7.png)
+
+*图源：DeepSeek-V2 技术报告 Figure 3（论文原图页截图），用于开源技术解读与引用。*
+
+![DeepSeek-V3 Figure 2（V3 基础架构，延续 MLA + DeepSeekMoE）](./_figures/v3-fig2-architecture-page7.png)
+
+*图源：DeepSeek-V3 技术报告 Figure 2（论文原图页截图），用于开源技术解读与引用。*
+
 ### 表 1：MHA / MQA / GQA / MLA 对比（精简）
 
 | 机制 | KV 组织方式 | 每 token cache | 能力/成本取舍 |

@@ -37,6 +37,16 @@ flowchart LR
     C --> D[DeepSeek-R1<br/>GRPO + 多阶段 RL/SFT]
 ```
 
+### 论文原图（授权引用）
+
+![DeepSeek-V2 Figure 2（V2 架构示意）](../architecture/_figures/v2-fig2-architecture-page5.png)
+
+![DeepSeek-V3 Figure 2（V3 架构示意）](../architecture/_figures/v3-fig2-architecture-page7.png)
+
+![DeepSeek-R1 Figure 2（R1 多阶段训练流水线）](../training/_figures/r1-fig2-pipeline-page6.png)
+
+*图源：DeepSeek-V2 / DeepSeek-V3 / DeepSeek-R1 技术报告对应 Figure（论文原图页截图），用于开源技术解读与引用。*
+
 ### 表 1：代际核心指标总表（精简）
 
 | 代际 | 核心动作 | 主要收益 | 主要代价 |
