@@ -48,6 +48,7 @@
 - [可观测性与调试](06-observability-and-debugging.md)
 - [Paged KV 与 Allocator](07-paged-kv-and-allocator.md)
 - [长上下文 Serving](08-long-context-serving.md)
+- [赤兔（Chitu）推理引擎：面试备战笔记](09-chitu-inference-engine.md)
 
 ## 已完成“实战型重构”的核心页
 
@@ -59,6 +60,7 @@
 - [可观测性与调试](06-observability-and-debugging.md)
 - [Paged KV 与 Allocator](07-paged-kv-and-allocator.md)
 - [长上下文 Serving](08-long-context-serving.md)
+- [赤兔（Chitu）推理引擎：面试备战笔记](09-chitu-inference-engine.md)
 
 ## 后续补强建议
 

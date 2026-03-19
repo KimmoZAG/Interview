@@ -173,6 +173,7 @@ nav:
       - 可观测性与调试: ai-infra/02-inference-engine/06-observability-and-debugging.md
       - Paged KV 与 Allocator: ai-infra/02-inference-engine/07-paged-kv-and-allocator.md
       - 长上下文推理: ai-infra/02-inference-engine/08-long-context-serving.md
+      - 赤兔推理引擎面试笔记: ai-infra/02-inference-engine/09-chitu-inference-engine.md
     - LLM 架构:
       - ai-infra/03-llm-architecture/00-index.md
       - Transformer 最小知识: ai-infra/03-llm-architecture/01-transformer-minimum.md
