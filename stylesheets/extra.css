@@ -484,9 +484,13 @@
 }
 
 .md-footer-nav__link {
-  padding: 1.2em 1.5em;
+  padding: 0.55em 1em;
   transition: background 0.2s ease, color 0.2s ease;
-  border-radius: 8px;
+  border-radius: 6px;
+}
+
+.md-footer-nav {
+  padding: 0.3em 0;
 }
 
 .md-footer-nav__link:hover {
