@@ -127,6 +127,12 @@ plugins:
 nav:
   - 首页: README.md
 
+  - 项目实战:
+    - Neuromem: item/neuromem.md
+    - SAGE: item/sage.md
+    - SageLLM: item/sagellm.md
+    - CandorBench: item/candorbench.md
+
   - CS336:
     - cs336/00-index.md
     - 导读:
