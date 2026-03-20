@@ -103,13 +103,12 @@ plugins:
         - zh
         - en
   - tags:
+      tags_file: reference/tags.md
   - git-revision-date-localized:
       enable_creation_date: true
       type: timeago
       locale: zh
       fallback_to_build_date: true
-      exclude:
-      - model/deepseek/**
   - glightbox:
       touchNavigation: true
       loop: false
@@ -127,11 +126,22 @@ plugins:
 nav:
   - 首页: README.md
 
-  - 项目实战:
-    - Neuromem: item/neuromem.md
-    - SAGE: item/sage.md
-    - SageLLM: item/sagellm.md
-    - CandorBench: item/candorbench.md
+  - LMCache:
+    - LMCache/00-index.md
+    - 导读: LMCache/README.md
+    - 速记提纲: LMCache/interview-review-outline.md
+    - 主线章节:
+      - 01 整体架构与核心抽象: LMCache/01-overall-architecture-and-core-abstractions.md
+      - 02 Chunk 切分、哈希键与元数据: LMCache/02-chunking-hashing-and-metadata.md
+      - 03 存储层、分层卸载与生命周期: LMCache/03-storage-hierarchy-offload-and-lifecycle.md
+      - 04 GPU Connector 与异步 Store/Load: LMCache/04-gpu-connector-and-async-store-load.md
+      - 05 P2P KV 共享、Lookup 与网络通信: LMCache/05-p2p-lookup-and-network-communication.md
+      - 06 Disaggregated Prefill 与控制平面: LMCache/06-disaggregated-prefill-and-control-plane.md
+      - 07 与 vLLM / SGLang 的集成与解耦: LMCache/07-integration-with-vllm-and-sglang.md
+      - 08 可观测性、健康检查与工程化部署: LMCache/08-observability-health-and-production-deployment.md
+    - 附录:
+      - 附录 A Native Fast Path: LMCache/appendix-a-native-fast-path-and-cpp-cuda-extensions.md
+      - 附录 B Operator 与多节点部署: LMCache/appendix-b-operator-and-production-multinode-deployment.md
 
   - CS336:
     - cs336/00-index.md
@@ -209,18 +219,6 @@ nav:
       - CS336 逐讲映射: ai-infra/05-appendix/cs336-lecture-to-ai-infra-map.md
       - 参考资料: ai-infra/05-appendix/references.md
 
-  - vLLM:
-    - 系列导读: vllm/00-index.md
-    - 架构总览: vllm/01-architecture-overview.md
-    - 模型加载机制: vllm/02-model-loading.md
-    - 多模型支持与注册: vllm/03-model-registry.md
-    - 算子替换与定制: vllm/04-custom-ops-and-operator-replacement.md
-    - 推理加速技术: vllm/05-inference-acceleration.md
-
-  - Chitu:
-    - 系列导读: chitu/00-index.md
-    - 赤兔推理引擎面试笔记: chitu/09-chitu-inference-engine.md
-
   - C++:
     - c++/00-index.md
     - 导读: c++/README.md
@@ -243,27 +241,6 @@ nav:
       - 坑位清单: c++/appendix/gotchas.md
       - 参考资料: c++/appendix/references.md
 
-  - DeepSeek:
-    - 总览: model/deepseek/index.md
-    - 架构专题:
-      - 最新 DeepSeek 架构（V3.2）: model/deepseek/architecture/latest_deepseek_v32_architecture.md
-      - DeepSeekMoE: model/deepseek/architecture/deepseek_moe.md
-      - MLA 注意力: model/deepseek/architecture/mla_attention.md
-      - 路由与负载均衡: model/deepseek/architecture/routing_and_load_balancing.md
-      - 长上下文与 YaRN: model/deepseek/architecture/long_context_and_yarn.md
-    - 训练与对齐:
-      - 预训练策略: model/deepseek/training/pretraining_strategies.md
-      - RL 与 Alignment: model/deepseek/training/rl_and_alignment.md
-      - Reward 与 Verifier: model/deepseek/training/reward_design_and_verifiers.md
-      - RL 基础设施: model/deepseek/training/rl_infrastructure.md
-      - Distillation 与 Transfer: model/deepseek/training/distillation_and_transfer.md
-      - Failure Modes 与 Limitations: model/deepseek/training/failure_modes_and_limitations.md
-    - 工程系统:
-      - 工程优化与系统性能: model/deepseek/engineering/infra_optimization.md
-    - 对比与演进:
-      - V1 到 V3 代际演进: model/deepseek/comparison/v1_to_v3_evolution.md
-
   - 参考资料:
     - CS336 原始讲义链接: reference/cs336.md
-    - 笔记重构作战手册: reference/note-writing-playbook.md
     - 标签索引: reference/tags.md

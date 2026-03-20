@@ -10,6 +10,14 @@ description: 工程师视角的技术面试备考笔记，聚焦 AI Infra 系统
 
 <div class="grid cards" markdown>
 
+- :material-memory: **LMCache**
+
+    ---
+
+    基于 LMCache 源码的面试导向学习笔记，覆盖 KV Cache 复用、P2P、PD、控制平面、可观测性与 Operator。
+
+    [:octicons-arrow-right-24: 进入 LMCache](../LMCache/00-index.md)
+
 - :material-chip: **AI Infra**
 
     ---
