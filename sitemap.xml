@@ -5,6 +5,58 @@
          <lastmod>2026-03-20</lastmod>
     </url>
     <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/00-index/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/01-overall-architecture-and-core-abstractions/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/02-chunking-hashing-and-metadata/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/03-storage-hierarchy-offload-and-lifecycle/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/04-gpu-connector-and-async-store-load/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/05-p2p-lookup-and-network-communication/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/06-disaggregated-prefill-and-control-plane/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/07-integration-with-vllm-and-sglang/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/08-observability-health-and-production-deployment/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/appendix-a-native-fast-path-and-cpp-cuda-extensions/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/appendix-b-operator-and-production-multinode-deployment/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
+         <loc>https://kimmozag.github.io/Interview/LMCache/interview-review-outline/</loc>
+         <lastmod>2026-03-20</lastmod>
+    </url>
+    <url>
          <loc>https://kimmozag.github.io/Interview/ai-infra/</loc>
          <lastmod>2026-03-20</lastmod>
     </url>
