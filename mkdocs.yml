@@ -143,6 +143,18 @@ nav:
       - 附录 A Native Fast Path: LMCache/appendix-a-native-fast-path-and-cpp-cuda-extensions.md
       - 附录 B Operator 与多节点部署: LMCache/appendix-b-operator-and-production-multinode-deployment.md
 
+  - vLLM:
+    - vllm/00-index.md
+    - 01 架构总览: vllm/01-architecture-overview.md
+    - 02 模型加载机制: vllm/02-model-loading.md
+    - 03 多模型支持与注册: vllm/03-model-registry.md
+    - 04 算子替换与定制: vllm/04-custom-ops-and-operator-replacement.md
+    - 05 推理加速技术: vllm/05-inference-acceleration.md
+
+  - Chitu:
+    - chitu/00-index.md
+    - 赤兔推理引擎: chitu/09-chitu-inference-engine.md
+
   - CS336:
     - cs336/00-index.md
     - 导读:
